@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -7,7 +7,11 @@ import { ConfigService } from '@nestjs/config';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
-import { hashRefreshToken } from 'src/utils/handleRefreshToken';
+import {
+  compareRefreshToken,
+  hashRefreshToken,
+} from 'src/utils/handleRefreshToken';
+import { ERROR_MESSAGE } from 'src/constants/exception.message';
 
 @Injectable()
 export class AuthService {
@@ -38,6 +42,45 @@ export class AuthService {
     await this.userRepository.update(user.id, {
       refreshToken: hashedRefreshToken,
     });
+    return { accessToken };
+  }
+  async refreshToken(user: any, refreshTokenOld: string, res: Response) {
+    const userExists = await this.userRepository.findOne({
+      where: {
+        id: user.userId,
+      },
+    });
+    if (!userExists) {
+      throw new UnauthorizedException(ERROR_MESSAGE.UNAUTHENTICATED);
+    }
+    const compareRT = await compareRefreshToken(
+      refreshTokenOld,
+      userExists.refreshToken,
+    );
+    if (!compareRT) {
+      throw new UnauthorizedException(ERROR_MESSAGE.UNAUTHENTICATED);
+    }
+
+    // create new accessToken and new refreshToken
+    const { accessToken, refreshToken } = await this.signJwtToken(
+      userExists.id,
+      userExists.username,
+    );
+
+    // delete old refreshToken in cookie
+    this.removeRefreshTokenInCookie(res);
+
+    // save new refreshToken into cookie
+    this.saveRefreshTokenIntoCookie(res, refreshToken);
+
+    // hash new refreshToken
+    const hashedNewRefreshToken = await hashRefreshToken(refreshToken);
+
+    // save hashedNewRefreshToken into database
+    await this.userRepository.update(userExists.id, {
+      refreshToken: hashedNewRefreshToken,
+    });
+
     return { accessToken };
   }
   async validateUser(username: string, password: string): Promise<any> {
@@ -92,6 +135,16 @@ export class AuthService {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: this.MAX_AGE_COOKIE,
+      path: this.PATH,
+    });
+  }
+
+  removeRefreshTokenInCookie(res: Response) {
+    res.cookie(ENTITIES_MESSAGE.REFRESH_TOKEN, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
       path: this.PATH,
     });
   }
