@@ -5,7 +5,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { map, Observable } from 'rxjs';
+import { catchError, map, Observable, throwError } from 'rxjs';
 import { RESPONSE_MESSAGE_METADATA } from '../decorator/response.decorator';
 
 @Injectable()
@@ -27,6 +27,10 @@ export class ResponseInterceptor implements NestInterceptor {
         data,
         timestamp: new Date().toISOString(),
       })),
+      catchError((err) => {
+        console.error('Lỗi xảy ra trong request:', err);
+        return throwError(() => err);
+      }),
     );
   }
 }
