@@ -13,6 +13,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     const request = ctx.getRequest();
     console.log(`check exception: ${JSON.stringify(exception)}`);
+    console.error('Exception:', exception);
 
     const status =
       exception instanceof HttpException

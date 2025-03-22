@@ -109,7 +109,6 @@ export class UsersService {
       throw new NotFoundException(
         ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.USER),
       );
-    console.log(`check userExists:: ${JSON.stringify(userExists)}`);
     return this.convertToDTO(userExists);
   }
 
