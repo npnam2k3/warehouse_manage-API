@@ -149,7 +149,7 @@ export class AuthService {
   }
 
   removeRefreshTokenInCookie(res: Response) {
-    res.cookie(ENTITIES_MESSAGE.REFRESH_TOKEN, {
+    res.cookie(ENTITIES_MESSAGE.REFRESH_TOKEN, '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -169,5 +169,15 @@ export class AuthService {
       );
 
     return this.userService.convertToDTO(userExists);
+  }
+
+  async logout(res: Response, userId: number) {
+    // remove refresh token in cookie
+    this.removeRefreshTokenInCookie(res);
+
+    // update field refreshToken in user table = undefined
+    await this.userRepository.update(userId, {
+      refreshToken: '',
+    });
   }
 }
