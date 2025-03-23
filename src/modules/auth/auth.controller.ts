@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   HttpCode,
   Post,
   Request,
@@ -10,6 +11,7 @@ import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 import { RefreshTokenJwtGuard } from './guard/refreshToken.guard';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
+import { MyJwtGuard } from './guard/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -32,5 +34,11 @@ export class AuthController {
       req.cookies?.[ENTITIES_MESSAGE.REFRESH_TOKEN],
       res,
     );
+  }
+  @UseGuards(MyJwtGuard)
+  @Get('profile')
+  getProfile(@Request() req) {
+    const { userId } = req.user;
+    return this.authService.getProfile(+userId);
   }
 }

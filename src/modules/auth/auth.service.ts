@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -12,6 +16,7 @@ import {
   hashRefreshToken,
 } from 'src/utils/handleRefreshToken';
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +25,7 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly userService: UsersService,
   ) {}
   private TIME_EXPIRES_ACCESS_TOKEN: string = '5m';
   private TIME_EXPIRES_REFRESH_TOKEN: string = '7d';
@@ -51,6 +57,9 @@ export class AuthService {
       },
     });
     if (!userExists) {
+      throw new UnauthorizedException(ERROR_MESSAGE.UNAUTHENTICATED);
+    }
+    if (!userExists.refreshToken) {
       throw new UnauthorizedException(ERROR_MESSAGE.UNAUTHENTICATED);
     }
     const compareRT = await compareRefreshToken(
@@ -147,5 +156,18 @@ export class AuthService {
       maxAge: 0,
       path: this.PATH,
     });
+  }
+
+  async getProfile(userId: number) {
+    const userExists = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['role'],
+    });
+    if (!userExists)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.USER),
+      );
+
+    return this.userService.convertToDTO(userExists);
   }
 }
