@@ -16,4 +16,12 @@ export class RolesService {
     });
     return role;
   }
+  async findPermissionByRole(roleId: number) {
+    const role = await this.roleRepository.findOne({
+      where: { id: roleId },
+      relations: ['permissions'], // tên của property trong role entity
+      select: ['id', 'permissions'],
+    });
+    return role?.permissions;
+  }
 }

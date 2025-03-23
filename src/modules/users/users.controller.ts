@@ -15,9 +15,17 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
 import { MyJwtGuard } from '../auth/guard/jwt-auth.guard';
+import { AuthorizationGuard } from '../auth/guard/authorization.guard';
+import { Permissions } from 'src/decorator/permissions.decorator';
+import { Subject } from '../auth/enums/subject.enum';
+import { Action } from '../auth/enums/action.enum';
 
 @Controller('users')
-@UseGuards(MyJwtGuard)
+@UseGuards(MyJwtGuard, AuthorizationGuard)
+@Permissions({
+  subject: Subject.users,
+  actions: [Action.view, Action.create, Action.delete, Action.update],
+})
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
