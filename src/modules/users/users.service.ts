@@ -192,7 +192,6 @@ export class UsersService {
       );
     }
     await this.userRepository.softRemove(userExists);
-    // return `This action removes a #${id} user`;
   }
 
   convertToDTO(object) {

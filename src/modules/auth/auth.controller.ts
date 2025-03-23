@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -14,6 +15,7 @@ import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
 import { MyJwtGuard } from './guard/jwt-auth.guard';
 import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
+import { ChangePasswordDTO } from './dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -50,5 +52,17 @@ export class AuthController {
   logout(@Request() req, @Res({ passthrough: true }) res: any) {
     const { userId } = req.user;
     return this.authService.logout(res, +userId);
+  }
+
+  @Post('changePassword')
+  @UseGuards(MyJwtGuard)
+  @ResponseMessage(RESPONSE_MESSAGE.CHANGE_PASSWORD)
+  changePassword(
+    @Body() changePasswordDTO: ChangePasswordDTO,
+    @Request() req,
+    @Res({ passthrough: true }) res: any,
+  ) {
+    const { userId } = req.user;
+    return this.authService.changePassword(changePasswordDTO, +userId, res);
   }
 }

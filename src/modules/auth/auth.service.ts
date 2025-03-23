@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -6,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 import { Repository } from 'typeorm';
-import { comparePassword } from 'src/utils/handlePassword';
+import { comparePassword, hashPassword } from 'src/utils/handlePassword';
 import { ConfigService } from '@nestjs/config';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
 import { JwtService } from '@nestjs/jwt';
@@ -17,6 +18,7 @@ import {
 } from 'src/utils/handleRefreshToken';
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
 import { UsersService } from '../users/users.service';
+import { ChangePasswordDTO } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -179,5 +181,49 @@ export class AuthService {
     await this.userRepository.update(userId, {
       refreshToken: '',
     });
+  }
+
+  async changePassword(
+    changePasswordDTO: ChangePasswordDTO,
+    userId: number,
+    res: Response,
+  ) {
+    // check new password must be like confirm password
+    if (changePasswordDTO.confirmPassword !== changePasswordDTO.newPassword) {
+      throw new BadRequestException(ERROR_MESSAGE.INVALID_CONFIRM_PASSWORD);
+    }
+
+    // compare current password with hashedPassword in database
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.USER),
+      );
+    }
+    const matchPassword = await comparePassword(
+      changePasswordDTO.currentPassword,
+      user?.hashedPassword,
+    );
+    if (!matchPassword) {
+      throw new BadRequestException(ERROR_MESSAGE.WRONG_PASSWORD);
+    }
+
+    // check new password must be different old password
+    if (changePasswordDTO.newPassword === changePasswordDTO.currentPassword) {
+      throw new BadRequestException(ERROR_MESSAGE.DUPLICATE_PASSWORD);
+    }
+
+    // hash new password
+    const hashedNewPassword = await hashPassword(changePasswordDTO.newPassword);
+
+    // save hashedNewPassword into DB
+    await this.userRepository.update(userId, {
+      hashedPassword: hashedNewPassword,
+    });
+
+    // logout
+    await this.logout(res, userId);
   }
 }
