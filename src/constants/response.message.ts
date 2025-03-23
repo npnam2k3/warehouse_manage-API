@@ -4,4 +4,5 @@ export const RESPONSE_MESSAGE = {
   GET: 'Lấy thành công.',
   DELETE: 'Xóa thành công.',
   LOGOUT: 'Đăng xuất thành công.',
+  CHANGE_PASSWORD: 'Đổi mật khẩu thành công.',
 };

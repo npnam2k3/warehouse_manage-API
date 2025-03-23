@@ -8,5 +8,8 @@ export const ERROR_MESSAGE = {
   INVALID_CREDENTIALS: 'Thông tin không chính xác, vui lòng thử lại',
   UNAUTHENTICATED: 'Bạn chưa đăng nhập!',
   FORBIDDEN: 'Bạn không có quyền truy cập!',
+  INVALID_CONFIRM_PASSWORD: 'Mật khẩu xác thực phải trùng với mật khẩu mới.',
+  DUPLICATE_PASSWORD: 'Mật khẩu mới phải khác mật khẩu hiện tại',
+  WRONG_PASSWORD: 'Mật khẩu không chính xác!',
   NOT_FOUND: (entity: string) => `${entity} không tìm thấy.`,
 };
