@@ -3,4 +3,5 @@ export const RESPONSE_MESSAGE = {
   UPDATE: 'Cập nhật thành công.',
   GET: 'Lấy thành công.',
   DELETE: 'Xóa thành công.',
+  LOGOUT: 'Đăng xuất thành công.',
 };

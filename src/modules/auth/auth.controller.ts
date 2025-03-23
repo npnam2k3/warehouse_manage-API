@@ -12,6 +12,8 @@ import { LocalAuthGuard } from './guard/local-auth.guard';
 import { RefreshTokenJwtGuard } from './guard/refreshToken.guard';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
 import { MyJwtGuard } from './guard/jwt-auth.guard';
+import { ResponseMessage } from 'src/decorator/response.decorator';
+import { RESPONSE_MESSAGE } from 'src/constants/response.message';
 
 @Controller('auth')
 export class AuthController {
@@ -40,5 +42,13 @@ export class AuthController {
   getProfile(@Request() req) {
     const { userId } = req.user;
     return this.authService.getProfile(+userId);
+  }
+
+  @UseGuards(MyJwtGuard)
+  @Post('logout')
+  @ResponseMessage(RESPONSE_MESSAGE.LOGOUT)
+  logout(@Request() req, @Res({ passthrough: true }) res: any) {
+    const { userId } = req.user;
+    return this.authService.logout(res, +userId);
   }
 }
