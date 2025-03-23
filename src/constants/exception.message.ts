@@ -7,5 +7,6 @@ export const ERROR_MESSAGE = {
   INTERNAL_ERROR_SERVER: 'Hệ thống bận, vui lòng thử lại.',
   INVALID_CREDENTIALS: 'Thông tin không chính xác, vui lòng thử lại',
   UNAUTHENTICATED: 'Bạn chưa đăng nhập!',
+  FORBIDDEN: 'Bạn không có quyền truy cập!',
   NOT_FOUND: (entity: string) => `${entity} không tìm thấy.`,
 };
