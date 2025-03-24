@@ -3,7 +3,9 @@ import {
   Controller,
   Get,
   HttpCode,
+  Param,
   Post,
+  Put,
   Request,
   Res,
   UseGuards,
@@ -16,6 +18,8 @@ import { MyJwtGuard } from './guard/jwt-auth.guard';
 import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
 import { ChangePasswordDTO } from './dto/change-password.dto';
+import { ForgotPasswordDTO } from './dto/forgot-password.dto';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -64,5 +68,21 @@ export class AuthController {
   ) {
     const { userId } = req.user;
     return this.authService.changePassword(changePasswordDTO, +userId, res);
+  }
+
+  @Post('forgotPassword')
+  @ResponseMessage(RESPONSE_MESSAGE.SEND_EMAIL)
+  forgotPassword(@Body() forgotPasswordDTO: ForgotPasswordDTO) {
+    const { email } = forgotPasswordDTO;
+    return this.authService.forgotPassword(email);
+  }
+
+  @Put('resetPassword/:token')
+  @ResponseMessage(RESPONSE_MESSAGE.CHANGE_PASSWORD)
+  resetPassword(
+    @Param('token') token: string,
+    @Body() resetPasswordDTO: ResetPasswordDTO,
+  ) {
+    return this.authService.resetPassword(token, resetPasswordDTO);
   }
 }

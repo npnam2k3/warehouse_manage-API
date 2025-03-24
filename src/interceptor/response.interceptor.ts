@@ -28,7 +28,7 @@ export class ResponseInterceptor implements NestInterceptor {
         timestamp: new Date().toISOString(),
       })),
       catchError((err) => {
-        console.error('Lỗi xảy ra trong request:', err);
+        // console.error('Lỗi xảy ra trong request:', err);
         return throwError(() => err);
       }),
     );

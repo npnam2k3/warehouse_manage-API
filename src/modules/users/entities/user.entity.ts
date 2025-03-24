@@ -26,8 +26,14 @@ export class User {
   @Column()
   email: string;
 
-  @Column({ nullable: true })
-  refreshToken: string;
+  @Column({ type: 'varchar', nullable: true })
+  refreshToken: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  tokenResetPassword: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  tokenResetPasswordExpiration: Date | null;
 
   @CreateDateColumn()
   createdAt: Date;
