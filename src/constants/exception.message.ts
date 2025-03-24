@@ -11,5 +11,5 @@ export const ERROR_MESSAGE = {
   INVALID_CONFIRM_PASSWORD: 'Mật khẩu xác thực phải trùng với mật khẩu mới.',
   DUPLICATE_PASSWORD: 'Mật khẩu mới phải khác mật khẩu hiện tại',
   WRONG_PASSWORD: 'Mật khẩu không chính xác!',
-  NOT_FOUND: (entity: string) => `${entity} không tìm thấy.`,
+  NOT_FOUND: (entity: string) => `${entity} không được tìm thấy.`,
 };

@@ -5,4 +5,5 @@ export const RESPONSE_MESSAGE = {
   DELETE: 'Xóa thành công.',
   LOGOUT: 'Đăng xuất thành công.',
   CHANGE_PASSWORD: 'Đổi mật khẩu thành công.',
+  SEND_EMAIL: 'Gửi email thành công.',
 };

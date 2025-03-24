@@ -5,7 +5,7 @@ export const CustomValidationPipe = new ValidationPipe({
     const formattedErrors = errors.map((error) => {
       // Ưu tiên lỗi `isNotEmpty` trước nếu có
       const constraints = error.constraints || {};
-      console.log(`check constraints ${JSON.stringify(constraints)}`);
+      // console.log(`check constraints ${JSON.stringify(constraints)}`);
       if (constraints.isNotEmpty) {
         return {
           field: error.property,

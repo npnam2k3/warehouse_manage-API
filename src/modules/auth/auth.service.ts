@@ -1,12 +1,13 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { comparePassword, hashPassword } from 'src/utils/handlePassword';
 import { ConfigService } from '@nestjs/config';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
@@ -19,6 +20,9 @@ import {
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
 import { UsersService } from '../users/users.service';
 import { ChangePasswordDTO } from './dto/change-password.dto';
+import { randomBytes } from 'crypto';
+import { MailService } from 'src/mail/mail.service';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -28,11 +32,14 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly userService: UsersService,
+    private readonly mailService: MailService,
   ) {}
   private TIME_EXPIRES_ACCESS_TOKEN: string = '5m';
   private TIME_EXPIRES_REFRESH_TOKEN: string = '7d';
   private MAX_AGE_COOKIE: number = 7 * 24 * 60 * 60 * 1000; // 7 days
   private PATH: string = '/auth';
+
+  private readonly TOKEN_EXPIRATION_TIME = 60 * 15 * 1000; // 15 minutes
 
   async login(user: any, res: Response) {
     const { refreshToken, accessToken } = await this.signJwtToken(
@@ -225,5 +232,51 @@ export class AuthService {
 
     // logout
     await this.logout(res, userId);
+  }
+
+  async forgotPassword(email: string) {
+    const userExists = await this.userRepository.findOne({
+      where: {
+        email,
+      },
+    });
+    if (!userExists)
+      throw new BadRequestException(ERROR_MESSAGE.NOT_FOUND('Email'));
+
+    const tokenReset = randomBytes(32).toString('hex');
+    userExists.tokenResetPassword = tokenReset;
+    userExists.tokenResetPasswordExpiration = new Date(
+      Date.now() + this.TOKEN_EXPIRATION_TIME,
+    );
+    await this.userRepository.save(userExists);
+    try {
+      await this.mailService.sendEmail(userExists, tokenReset);
+    } catch (error) {
+      console.error(`Email sending failed for ${email}:`, error);
+      throw new InternalServerErrorException(
+        ERROR_MESSAGE.INTERNAL_ERROR_SERVER,
+      );
+    }
+  }
+  async resetPassword(tokenReset: string, resetPasswordDTO: ResetPasswordDTO) {
+    const userExists = await this.userRepository.findOne({
+      where: {
+        tokenResetPassword: tokenReset,
+        tokenResetPasswordExpiration: MoreThan(new Date()),
+      },
+    });
+    if (!userExists)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.USER),
+      );
+    if (resetPasswordDTO.newPassword !== resetPasswordDTO.confirmPassword)
+      throw new BadRequestException(ERROR_MESSAGE.INVALID_CONFIRM_PASSWORD);
+
+    const hashedNewPassword = await hashPassword(resetPasswordDTO.newPassword);
+    userExists.hashedPassword = hashedNewPassword;
+    userExists.tokenResetPassword = null;
+    userExists.tokenResetPasswordExpiration = null;
+    userExists.refreshToken = null;
+    await this.userRepository.save(userExists);
   }
 }
