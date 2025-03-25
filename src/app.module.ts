@@ -13,6 +13,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './mail/mail.module';
 import { CategoryModule } from './modules/category/category.module';
+import { WarehouseModule } from './modules/warehouse/warehouse.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { CategoryModule } from './modules/category/category.module';
     AuthModule,
     MailModule,
     CategoryModule,
+    WarehouseModule,
   ],
   controllers: [AppController],
   providers: [

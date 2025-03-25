@@ -65,12 +65,13 @@ export class CategoryService {
       );
 
     // check the new category's name must be different with others category
-    const existingCategory = await this.categoryRepository.findOne({
-      where: {
+    const existingCategory = await this.categoryRepository
+      .createQueryBuilder('category')
+      .where('LOWER(category.name) = LOWER(:name)', {
         name: updateCategoryDto.name,
-        id: Not(id),
-      },
-    });
+      })
+      .andWhere('category.id != :id', { id })
+      .getOne();
     if (existingCategory)
       throw new ConflictException(
         ERROR_MESSAGE.ALREADY_EXISTS(ENTITIES_MESSAGE.CATEGORY),
