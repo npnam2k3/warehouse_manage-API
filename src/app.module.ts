@@ -12,6 +12,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './mail/mail.module';
+import { CategoryModule } from './modules/category/category.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { MailModule } from './mail/mail.module';
     PermissionsModule,
     AuthModule,
     MailModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [

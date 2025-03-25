@@ -12,4 +12,5 @@ export const ERROR_MESSAGE = {
   DUPLICATE_PASSWORD: 'Mật khẩu mới phải khác mật khẩu hiện tại',
   WRONG_PASSWORD: 'Mật khẩu không chính xác!',
   NOT_FOUND: (entity: string) => `${entity} không được tìm thấy.`,
+  ALREADY_EXISTS: (entity: string) => `${entity} đã tồn tại`,
 };
