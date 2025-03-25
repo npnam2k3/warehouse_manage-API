@@ -34,7 +34,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly mailService: MailService,
   ) {}
-  private TIME_EXPIRES_ACCESS_TOKEN: string = '5m';
+  private TIME_EXPIRES_ACCESS_TOKEN: string = '1d';
   private TIME_EXPIRES_REFRESH_TOKEN: string = '7d';
   private MAX_AGE_COOKIE: number = 7 * 24 * 60 * 60 * 1000; // 7 days
   private PATH: string = '/auth';
