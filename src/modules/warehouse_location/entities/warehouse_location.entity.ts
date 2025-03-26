@@ -1,24 +1,24 @@
-import { WarehouseLocation } from 'src/modules/warehouse_location/entities/warehouse_location.entity';
+import { Warehouse } from 'src/modules/warehouse/entities/warehouse.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  OneToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class Warehouse {
+export class WarehouseLocation {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  name: string;
+  location_code: string;
 
-  @Column({ nullable: true })
-  address: string;
+  @Column({ type: 'varchar', nullable: true })
+  description: string | null;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -29,9 +29,6 @@ export class Warehouse {
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
 
-  @OneToMany(
-    () => WarehouseLocation,
-    (warehouseLocation) => warehouseLocation.warehouse,
-  )
-  warehouse_locations: WarehouseLocation[];
+  @ManyToOne(() => Warehouse, (warehouse) => warehouse.warehouse_locations)
+  warehouse: Warehouse;
 }
