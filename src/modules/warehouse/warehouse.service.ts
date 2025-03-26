@@ -47,6 +47,7 @@ export class WarehouseService {
   async findOne(id: number) {
     const warehouseExists = await this.warehouseRepository.findOne({
       where: { id },
+      relations: ['warehouse_locations'],
     });
     if (!warehouseExists)
       throw new NotFoundException(
