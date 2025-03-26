@@ -14,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './mail/mail.module';
 import { CategoryModule } from './modules/category/category.module';
 import { WarehouseModule } from './modules/warehouse/warehouse.module';
+import { WarehouseLocationModule } from './modules/warehouse_location/warehouse_location.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { WarehouseModule } from './modules/warehouse/warehouse.module';
     MailModule,
     CategoryModule,
     WarehouseModule,
+    WarehouseLocationModule,
   ],
   controllers: [AppController],
   providers: [
