@@ -60,7 +60,7 @@ export class UsersService {
     return this.convertToDTO(newUser);
   }
 
-  async findAll({ page, limit, search, sortBy, orderBy }) {
+  async findAll({ pageNum, limitNum, search, sortBy, orderBy }) {
     // thứ tự thực hiện sql: search => order => pagination
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
@@ -82,17 +82,17 @@ export class UsersService {
     //3. pagination
     const totalRecords = await queryBuilder.getCount();
     const users = await queryBuilder
-      .skip((page - 1) * limit)
-      .take(limit)
+      .skip((pageNum - 1) * limitNum)
+      .take(limitNum)
       .getMany();
 
     return {
       users,
       totalRecords,
-      totalPages: Math.ceil(totalRecords / limit),
+      totalPages: Math.ceil(totalRecords / limitNum),
       conditions: {
-        page,
-        limit,
+        pageNum,
+        limitNum,
         search,
         sortBy,
         orderBy,

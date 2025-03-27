@@ -19,6 +19,7 @@ import { AuthorizationGuard } from '../auth/guard/authorization.guard';
 import { Permissions } from 'src/decorator/permissions.decorator';
 import { Subject } from '../auth/enums/subject.enum';
 import { Action } from '../auth/enums/action.enum';
+import { PAGINATION } from 'src/constants/pagination';
 
 @Controller('users')
 @UseGuards(MyJwtGuard, AuthorizationGuard)
@@ -42,13 +43,21 @@ export class UsersController {
   })
   @ResponseMessage(RESPONSE_MESSAGE.GET)
   findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 5,
+    @Query('page') page: number,
+    @Query('limit') limit: number,
     @Query('search') search?: string,
     @Query('sortBy') sortBy: string = 'createdAt',
     @Query('orderBy') orderBy: 'ASC' | 'DESC' = 'DESC',
   ) {
-    return this.usersService.findAll({ page, limit, search, sortBy, orderBy });
+    const pageNum = page ? page : PAGINATION.USER.PAGE_NUMBER;
+    const limitNum = limit ? limit : PAGINATION.USER.LIMIT_NUMBER;
+    return this.usersService.findAll({
+      pageNum,
+      limitNum,
+      search,
+      sortBy,
+      orderBy,
+    });
   }
 
   @Get(':id')
