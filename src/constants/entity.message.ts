@@ -3,6 +3,7 @@ export const ENTITIES_MESSAGE = {
   CATEGORY: 'Danh mục',
   WAREHOUSE: 'Kho',
   LOCATION: 'Vị trí trong kho',
+  CUSTOMER: 'Khách hàng',
 
   JWT_ACCESS_TOKEN_KEY: 'jwt_access_token_secret',
   JWT_REFRESH_TOKEN_KEY: 'jwt_refresh_token_secret',
