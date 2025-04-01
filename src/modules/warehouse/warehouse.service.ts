@@ -11,6 +11,8 @@ import { Repository } from 'typeorm';
 import { Warehouse } from './entities/warehouse.entity';
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
+import { getInfoObject } from 'src/utils/compareObject';
+import { isEmpty, isEqual, omitBy } from 'lodash';
 
 @Injectable()
 export class WarehouseService {
@@ -70,7 +72,7 @@ export class WarehouseService {
 
     const existingWarehouse = await this.warehouseRepository
       .createQueryBuilder('warehouse')
-      .where('LOWER(warehouse.name) = LOWER(:name)', {
+      .where('warehouse.name = :name', {
         name: updateWarehouseDto.name,
       })
       .andWhere('warehouse.id != :id', { id })
@@ -80,18 +82,18 @@ export class WarehouseService {
         ERROR_MESSAGE.ALREADY_EXISTS(ENTITIES_MESSAGE.WAREHOUSE),
       );
 
-    let isUpdated = false;
-
-    Object.entries(updateWarehouseDto)?.forEach(([key, value]) => {
-      if (value && warehouseExists[key] !== value) {
-        warehouseExists[key] = value;
-        isUpdated = true;
-      }
-    });
-    if (!isUpdated) throw new BadRequestException(ERROR_MESSAGE.NO_DATA_CHANGE);
-
-    await this.warehouseRepository.update(id, warehouseExists);
-    return warehouseExists;
+    const oldData = {
+      name: warehouseExists.name,
+      address: warehouseExists.address,
+    };
+    const newData = getInfoObject(['name', 'address'], updateWarehouseDto);
+    const changeFields = omitBy(newData, (value, key) =>
+      isEqual(oldData[key], value),
+    );
+    if (isEmpty(changeFields)) {
+      throw new BadRequestException(ERROR_MESSAGE.NO_DATA_CHANGE);
+    }
+    await this.warehouseRepository.update(id, changeFields);
   }
 
   async remove(id: number) {

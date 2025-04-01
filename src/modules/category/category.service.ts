@@ -11,6 +11,8 @@ import { Category } from './entities/category.entity';
 import { Not, Repository } from 'typeorm';
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
+import { getInfoObject } from 'src/utils/compareObject';
+import { isEmpty, isEqual, omitBy } from 'lodash';
 
 @Injectable()
 export class CategoryService {
@@ -67,7 +69,7 @@ export class CategoryService {
     // check the new category's name must be different with others category
     const existingCategory = await this.categoryRepository
       .createQueryBuilder('category')
-      .where('LOWER(category.name) = LOWER(:name)', {
+      .where('category.name = :name', {
         name: updateCategoryDto.name,
       })
       .andWhere('category.id != :id', { id })
@@ -78,16 +80,18 @@ export class CategoryService {
       );
 
     // new data must be different old data
-    let isUpdated = false;
-    Object.entries(updateCategoryDto).forEach(([key, value]) => {
-      if (value && categoryExists[key] !== value) {
-        categoryExists[key] = value;
-        isUpdated = true;
-      }
-    });
-    if (!isUpdated) throw new BadRequestException(ERROR_MESSAGE.NO_DATA_CHANGE);
-    await this.categoryRepository.update(id, categoryExists);
-    return categoryExists;
+    const oldData = {
+      name: categoryExists.name,
+      description: categoryExists.description,
+    };
+    const newData = getInfoObject(['name', 'description'], updateCategoryDto);
+    const changeFields = omitBy(newData, (value, key) =>
+      isEqual(oldData[key], value),
+    );
+    if (isEmpty(changeFields)) {
+      throw new BadRequestException(ERROR_MESSAGE.NO_DATA_CHANGE);
+    }
+    await this.categoryRepository.update(id, changeFields);
   }
 
   async remove(id: number) {
