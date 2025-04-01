@@ -16,6 +16,7 @@ import { CategoryModule } from './modules/category/category.module';
 import { WarehouseModule } from './modules/warehouse/warehouse.module';
 import { WarehouseLocationModule } from './modules/warehouse_location/warehouse_location.module';
 import { CustomersModule } from './modules/customers/customers.module';
+import { SuppliesModule } from './modules/supplies/supplies.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { CustomersModule } from './modules/customers/customers.module';
     WarehouseModule,
     WarehouseLocationModule,
     CustomersModule,
+    SuppliesModule,
   ],
   controllers: [AppController],
   providers: [
