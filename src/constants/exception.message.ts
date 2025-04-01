@@ -1,6 +1,7 @@
 export const ERROR_MESSAGE = {
   USERNAME_EXISTS: 'Tên đăng nhập đã tồn tại.',
   EMAIL_EXISTS: 'Email đã tồn tại.',
+  USERNAME_EMAIL_EXISTS: 'Tên đăng nhập và email đã tồn tại.',
   INVALID_INPUT_UPDATE: 'Dữ liệu cập nhật không hợp lệ',
   INVALID_INPUT: 'Dữ liệu không hợp lệ',
   NO_DATA_CHANGE: 'Dữ liệu không thay đổi, hãy nhập lại.',
@@ -11,6 +12,7 @@ export const ERROR_MESSAGE = {
   INVALID_CONFIRM_PASSWORD: 'Mật khẩu xác thực phải trùng với mật khẩu mới.',
   DUPLICATE_PASSWORD: 'Mật khẩu mới phải khác mật khẩu hiện tại',
   WRONG_PASSWORD: 'Mật khẩu không chính xác!',
+  BLOCKED: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ admin để khôi phục.',
   NOT_FOUND: (entity: string) => `${entity} không được tìm thấy.`,
   ALREADY_EXISTS: (entity: string) => `${entity} đã tồn tại`,
 };

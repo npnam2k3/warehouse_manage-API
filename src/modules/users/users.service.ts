@@ -10,13 +10,15 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { FindOptionsWhere, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
 import { hashPassword } from 'src/utils/handlePassword';
 import { RolesService } from '../roles/roles.service';
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDTO } from './dto/response-user.dto';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
+import { getInfoObject } from 'src/utils/compareObject';
+import { isEmpty, isEqual, omitBy } from 'lodash';
 
 @Injectable()
 export class UsersService {
@@ -35,7 +37,8 @@ export class UsersService {
     // if exists => throw error
     if (userExists) {
       throw new ConflictException(
-        userExists.username === createUserDto.username
+        userExists.username.toLowerCase() ===
+        createUserDto.username.toLowerCase()
           ? ERROR_MESSAGE.USERNAME_EXISTS
           : ERROR_MESSAGE.EMAIL_EXISTS,
       );
@@ -84,6 +87,15 @@ export class UsersService {
     const users = await queryBuilder
       .skip((pageNum - 1) * limitNum)
       .take(limitNum)
+      .select([
+        'user.id',
+        'user.email',
+        'user.username',
+        'user.fullname',
+        'user.createdAt',
+        'user.role',
+        'user.isBlock',
+      ])
       .getMany();
 
     return {
@@ -131,49 +143,63 @@ export class UsersService {
           ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.USER),
         );
 
-      // console.log(`check userExists:: ${JSON.stringify(userExists)}`);
-
       // if exists => check the user with value update must be different with others user (username, email)
-      const { email, username, role, ...otherUpdates } = updateUserDto;
-      const whereConditions: FindOptionsWhere<User>[] = [];
-      if (username) whereConditions.push({ username, id: Not(id) });
-      if (email) whereConditions.push({ email, id: Not(id) });
-      const existingUser =
-        whereConditions.length > 0
-          ? await this.userRepository.findOne({ where: whereConditions })
-          : null;
+      const existingUser = await this.userRepository
+        .createQueryBuilder('user')
+        .select(['user.id', 'user.email', 'user.username'])
+        .where('(user.email = :email OR user.username = :username)', {
+          email: updateUserDto.email,
+          username: updateUserDto.username,
+        })
+        .andWhere('user.id != :id', { id })
+        .getOne();
       if (existingUser) {
-        if (existingUser.username === username) {
+        if (
+          existingUser.username.toLowerCase() ===
+            updateUserDto.username?.toLowerCase() &&
+          existingUser.email.toLowerCase() ===
+            updateUserDto.email?.toLowerCase()
+        ) {
+          throw new ConflictException(ERROR_MESSAGE.USERNAME_EMAIL_EXISTS);
+        } else if (
+          existingUser.username.toLowerCase() ===
+          updateUserDto.username?.toLowerCase()
+        ) {
           throw new ConflictException(ERROR_MESSAGE.USERNAME_EXISTS);
-        }
-        if (existingUser.email === email) {
+        } else if (
+          existingUser.email.toLowerCase() ===
+          updateUserDto.email?.toLowerCase()
+        ) {
           throw new ConflictException(ERROR_MESSAGE.EMAIL_EXISTS);
         }
       }
 
       // check that the user's old data is different from the new data they want to update
-      let isUpdated = false;
-      const updatedFields: Partial<User> = {};
-      Object.entries(updateUserDto).forEach(([key, value]) => {
-        if (value && key !== 'role' && userExists[key] !== value) {
-          updatedFields[key] = value;
-          isUpdated = true;
-        }
-      });
-      if (role && userExists.role?.name !== role.toUpperCase()) {
-        const foundRole = await this.roleService.findRoleByName(role);
-        if (foundRole) {
-          updatedFields.role = foundRole;
-          isUpdated = true;
-        }
-      }
-      // console.log(`check updateFields:: ${JSON.stringify(updatedFields)}`);
-      // console.log(`check isUpdated:: ${isUpdated}`);
-      if (!isUpdated)
-        throw new BadRequestException(ERROR_MESSAGE.NO_DATA_CHANGE);
-      await this.userRepository.update(id, updatedFields);
+      const oldData = {
+        username: userExists.username,
+        email: userExists.email,
+        fullname: userExists.fullname,
+        role: userExists.role.name.toLowerCase(),
+      };
+      const newData = getInfoObject(
+        ['username', 'email', 'fullname', 'role'],
+        updateUserDto,
+      );
 
-      return this.convertToDTO({ ...userExists, ...updatedFields });
+      // loai bo cac truong giong nhau => thu duoc object cac truong thay doi
+      const changeFields = omitBy(newData, (value, key) =>
+        isEqual(oldData[key], value),
+      );
+      if (isEmpty(changeFields)) {
+        throw new BadRequestException(ERROR_MESSAGE.NO_DATA_CHANGE);
+      }
+      if (changeFields?.role) {
+        const foundRole = await this.roleService.findRoleByName(
+          changeFields.role,
+        );
+        changeFields.role = foundRole;
+      }
+      await this.userRepository.update(id, changeFields);
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(
@@ -192,6 +218,32 @@ export class UsersService {
       );
     }
     await this.userRepository.softRemove(userExists);
+  }
+  async block(id: number) {
+    const userExists = await this.userRepository.findOne({
+      where: { id },
+    });
+    if (!userExists) {
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.USER),
+      );
+    }
+    await this.userRepository.update(id, {
+      isBlock: true,
+    });
+  }
+  async unblock(id: number) {
+    const userExists = await this.userRepository.findOne({
+      where: { id },
+    });
+    if (!userExists) {
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.USER),
+      );
+    }
+    await this.userRepository.update(id, {
+      isBlock: false,
+    });
   }
 
   convertToDTO(object) {
