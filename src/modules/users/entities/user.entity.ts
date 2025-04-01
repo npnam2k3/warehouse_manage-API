@@ -26,6 +26,9 @@ export class User {
   @Column()
   email: string;
 
+  @Column({ default: false })
+  isBlock: boolean;
+
   @Column({ type: 'varchar', nullable: true })
   refreshToken: string | null;
 

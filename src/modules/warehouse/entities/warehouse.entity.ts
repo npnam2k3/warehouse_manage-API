@@ -1,10 +1,8 @@
-import { WarehouseLocation } from 'src/modules/warehouse_location/entities/warehouse_location.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -28,10 +26,4 @@ export class Warehouse {
 
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
-
-  @OneToMany(
-    () => WarehouseLocation,
-    (warehouseLocation) => warehouseLocation.warehouse,
-  )
-  warehouse_locations: WarehouseLocation[];
 }

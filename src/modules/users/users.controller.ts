@@ -22,7 +22,7 @@ import { Action } from '../auth/enums/action.enum';
 import { PAGINATION } from 'src/constants/pagination';
 
 @Controller('users')
-@UseGuards(MyJwtGuard, AuthorizationGuard)
+// @UseGuards(MyJwtGuard, AuthorizationGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -88,5 +88,24 @@ export class UsersController {
   @ResponseMessage(RESPONSE_MESSAGE.DELETE)
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
+  }
+
+  @Patch('block/:id')
+  @Permissions({
+    subject: Subject.users,
+    actions: [Action.update],
+  })
+  @ResponseMessage(RESPONSE_MESSAGE.BLOCK)
+  block(@Param('id') id: string) {
+    return this.usersService.block(+id);
+  }
+  @Patch('unBlock/:id')
+  @Permissions({
+    subject: Subject.users,
+    actions: [Action.update],
+  })
+  @ResponseMessage(RESPONSE_MESSAGE.UNBLOCK)
+  unBlock(@Param('id') id: string) {
+    return this.usersService.unblock(+id);
   }
 }
