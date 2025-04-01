@@ -84,13 +84,21 @@ export class CategoryService {
       name: categoryExists.name,
       description: categoryExists.description,
     };
-    const newData = getInfoObject(['name', 'description'], updateCategoryDto);
+    const newData: any = getInfoObject(
+      ['name', 'description'],
+      updateCategoryDto,
+    );
     const changeFields = omitBy(newData, (value, key) =>
       isEqual(oldData[key], value),
     );
     if (isEmpty(changeFields)) {
       throw new BadRequestException(ERROR_MESSAGE.NO_DATA_CHANGE);
     }
+
+    if (!newData.description) {
+      changeFields.description = oldData.description;
+    }
+
     await this.categoryRepository.update(id, changeFields);
   }
 

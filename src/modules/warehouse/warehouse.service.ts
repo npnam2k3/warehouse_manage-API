@@ -86,12 +86,15 @@ export class WarehouseService {
       name: warehouseExists.name,
       address: warehouseExists.address,
     };
-    const newData = getInfoObject(['name', 'address'], updateWarehouseDto);
+    const newData: any = getInfoObject(['name', 'address'], updateWarehouseDto);
     const changeFields = omitBy(newData, (value, key) =>
       isEqual(oldData[key], value),
     );
     if (isEmpty(changeFields)) {
       throw new BadRequestException(ERROR_MESSAGE.NO_DATA_CHANGE);
+    }
+    if (!newData.address) {
+      changeFields.address = oldData.address;
     }
     await this.warehouseRepository.update(id, changeFields);
   }
