@@ -12,6 +12,7 @@ import { Brackets, Repository } from 'typeorm';
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
 import { compareObject, getInfoObject } from 'src/utils/compareObject';
+import { isEmpty, isEqual, omitBy } from 'lodash';
 
 @Injectable()
 export class CustomersService {
@@ -21,12 +22,14 @@ export class CustomersService {
   ) {}
   async create(createCustomerDto: CreateCustomerDto) {
     const { fullname, email, phone, address } = createCustomerDto;
-    const customerExists = await this.customerRepository.count({
+    const customerExists = await this.customerRepository.findOne({
       where: [{ email }, { phone }],
     });
-    if (customerExists > 0) {
+    if (customerExists) {
       throw new ConflictException(
-        ERROR_MESSAGE.ALREADY_EXISTS(ENTITIES_MESSAGE.CUSTOMER),
+        customerExists.email.toLowerCase() === email.toLowerCase()
+          ? ERROR_MESSAGE.EMAIL_EXISTS
+          : ERROR_MESSAGE.PHONE_EXISTS,
       );
     }
 
@@ -105,7 +108,7 @@ export class CustomersService {
       .createQueryBuilder('customer')
       .where(
         new Brackets((qb) => {
-          qb.where('LOWER(customer.email) = LOWER(:email)', {
+          qb.where('customer.email = :email', {
             email: updateCustomerDto.email,
           }).orWhere('customer.phone = :phone', {
             phone: updateCustomerDto.phone,
@@ -113,23 +116,45 @@ export class CustomersService {
         }),
       )
       .andWhere('customer.id <> :id', { id })
-      .getCount();
+      .getOne();
 
-    if (existingCustomer > 0)
-      throw new ConflictException(
-        ERROR_MESSAGE.ALREADY_EXISTS(ENTITIES_MESSAGE.CUSTOMER),
-      );
+    if (existingCustomer) {
+      if (
+        existingCustomer.email.toLowerCase() ===
+          updateCustomerDto.email?.toLowerCase() &&
+        existingCustomer.phone === updateCustomerDto.phone
+      ) {
+        throw new ConflictException(ERROR_MESSAGE.EMAIL_PHONE_EXISTS);
+      } else if (
+        existingCustomer.email.toLowerCase() ===
+        updateCustomerDto.email?.toLowerCase()
+      ) {
+        throw new ConflictException(ERROR_MESSAGE.EMAIL_EXISTS);
+      } else if (existingCustomer.phone === updateCustomerDto.phone) {
+        throw new ConflictException(ERROR_MESSAGE.PHONE_EXISTS);
+      }
+    }
 
     // check new data must be different from old data
-    const updatedCustomer = { ...customerExists, ...updateCustomerDto };
-    const keysToCompare = ['fullname', 'email', 'phone', 'address'];
-    const existingData = getInfoObject(keysToCompare, customerExists);
-    const newData = getInfoObject(keysToCompare, updatedCustomer);
+    const oldData = {
+      fullname: customerExists.fullname,
+      email: customerExists.email,
+      phone: customerExists.phone,
+      address: customerExists.address,
+    };
 
-    if (compareObject(existingData, newData))
+    const newData = getInfoObject(
+      ['fullname', 'email', 'phone', 'address'],
+      updateCustomerDto,
+    );
+
+    const changeFields = omitBy(newData, (value, key) =>
+      isEqual(oldData[key], value),
+    );
+    if (isEmpty(changeFields)) {
       throw new BadRequestException(ERROR_MESSAGE.NO_DATA_CHANGE);
-
-    return await this.customerRepository.save(updatedCustomer);
+    }
+    await this.customerRepository.update(id, changeFields);
   }
 
   async remove(id: number) {

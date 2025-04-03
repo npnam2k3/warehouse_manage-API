@@ -3,7 +3,11 @@ export const ERROR_MESSAGE = {
 
   EMAIL_EXISTS: 'Email đã tồn tại.',
 
+  PHONE_EXISTS: 'Số điện thoại đã tồn tại.',
+
   USERNAME_EMAIL_EXISTS: 'Tên đăng nhập và email đã tồn tại.',
+
+  EMAIL_PHONE_EXISTS: 'Email và số điện thoại đã tồn tại.',
 
   INVALID_INPUT_UPDATE: 'Dữ liệu cập nhật không hợp lệ',
 
