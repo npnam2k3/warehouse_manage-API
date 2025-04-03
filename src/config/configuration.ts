@@ -17,4 +17,8 @@ export default () => ({
   mail_pass: process.env.EMAIL_APP_PASSWORD,
   mail_from: process.env.MAIL_FROM,
   client_url: process.env.CLIENT_URL,
+
+  cloudinary_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET,
 });

@@ -1,4 +1,4 @@
-import { WarehouseLocation } from 'src/modules/warehouse_location/entities/warehouse_location.entity';
+import { Inventory } from 'src/modules/products/entities/inventory.entity';
 import {
   Column,
   CreateDateColumn,
@@ -29,9 +29,6 @@ export class Warehouse {
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
 
-  @OneToMany(
-    () => WarehouseLocation,
-    (warehouseLocation) => warehouseLocation.warehouse,
-  )
-  warehouse_locations: WarehouseLocation[];
+  @OneToMany(() => Inventory, (inventory) => inventory.warehouse)
+  inventories: Inventory[];
 }

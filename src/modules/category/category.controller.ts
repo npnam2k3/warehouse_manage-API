@@ -16,7 +16,7 @@ import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
 
 @Controller('category')
-@UseGuards(MyJwtGuard)
+// @UseGuards(MyJwtGuard)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 

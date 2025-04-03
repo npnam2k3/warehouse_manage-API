@@ -14,9 +14,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MailModule } from './mail/mail.module';
 import { CategoryModule } from './modules/category/category.module';
 import { WarehouseModule } from './modules/warehouse/warehouse.module';
-import { WarehouseLocationModule } from './modules/warehouse_location/warehouse_location.module';
 import { CustomersModule } from './modules/customers/customers.module';
-import { SuppliesModule } from './modules/supplies/supplies.module';
+import { ProductsModule } from './modules/products/products.module';
+import { UnitModule } from './modules/unit/unit.module';
 
 @Module({
   imports: [
@@ -38,6 +38,7 @@ import { SuppliesModule } from './modules/supplies/supplies.module';
           database: dbConfig?.name,
           autoLoadEntities: true,
           synchronize: true,
+          logging: true,
         };
       },
     }),
@@ -48,9 +49,9 @@ import { SuppliesModule } from './modules/supplies/supplies.module';
     MailModule,
     CategoryModule,
     WarehouseModule,
-    WarehouseLocationModule,
     CustomersModule,
-    SuppliesModule,
+    ProductsModule,
+    UnitModule,
   ],
   controllers: [AppController],
   providers: [
