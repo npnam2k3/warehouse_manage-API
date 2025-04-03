@@ -1,8 +1,10 @@
+import { Inventory } from 'src/modules/products/entities/inventory.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -26,4 +28,7 @@ export class Warehouse {
 
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
+
+  @OneToMany(() => Inventory, (inventory) => inventory.warehouse)
+  inventories: Inventory[];
 }

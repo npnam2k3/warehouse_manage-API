@@ -47,6 +47,7 @@ export class CategoryService {
   async findOne(id: number) {
     const categoryExists = await this.categoryRepository.findOne({
       where: { id },
+      relations: ['products', 'products.inventories'],
     });
     if (!categoryExists)
       throw new NotFoundException(
@@ -105,10 +106,19 @@ export class CategoryService {
   async remove(id: number) {
     const categoryExists = await this.categoryRepository.findOne({
       where: { id },
+      relations: ['products'],
     });
     if (!categoryExists)
       throw new NotFoundException(
         ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.CATEGORY),
+      );
+
+    if (categoryExists.products.length > 0)
+      throw new BadRequestException(
+        ERROR_MESSAGE.DELETE_FAILED(
+          ENTITIES_MESSAGE.CATEGORY,
+          ENTITIES_MESSAGE.PRODUCT,
+        ),
       );
     await this.categoryRepository.softRemove(categoryExists);
   }

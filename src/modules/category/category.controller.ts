@@ -32,11 +32,11 @@ export class CategoryController {
     return this.categoryService.findAll();
   }
 
-  // @Get(':id')
-  // @ResponseMessage(RESPONSE_MESSAGE.GET)
-  // findOne(@Param('id') id: string) {
-  //   return this.categoryService.findOne(+id);
-  // }
+  @Get(':id')
+  @ResponseMessage(RESPONSE_MESSAGE.GET)
+  findOne(@Param('id') id: string) {
+    return this.categoryService.findOne(+id);
+  }
 
   @Patch(':id')
   @ResponseMessage(RESPONSE_MESSAGE.UPDATE)
@@ -47,9 +47,9 @@ export class CategoryController {
     return this.categoryService.update(+id, updateCategoryDto);
   }
 
-  // @Delete(':id')
-  // @ResponseMessage(RESPONSE_MESSAGE.DELETE)
-  // remove(@Param('id') id: string) {
-  //   return this.categoryService.remove(+id);
-  // }
+  @Delete(':id')
+  @ResponseMessage(RESPONSE_MESSAGE.DELETE)
+  remove(@Param('id') id: string) {
+    return this.categoryService.remove(+id);
+  }
 }

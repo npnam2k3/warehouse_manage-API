@@ -10,15 +10,11 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Category {
+export class Unit {
   @PrimaryGeneratedColumn()
   id: number;
-
   @Column()
   name: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  description: string | null;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -29,6 +25,6 @@ export class Category {
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
 
-  @OneToMany(() => Product, (product) => product.category)
+  @OneToMany(() => Product, (product) => product.unit)
   products: Product[];
 }
