@@ -9,10 +9,11 @@ import { Inventory } from './entities/inventory.entity';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { CategoryModule } from '../category/category.module';
 import { UnitModule } from '../unit/unit.module';
+import { Supply } from '../supplies/entities/supply.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product, Category, Unit, Inventory]),
+    TypeOrmModule.forFeature([Product, Category, Unit, Inventory, Supply]),
     CloudinaryModule,
     CategoryModule,
     UnitModule,
