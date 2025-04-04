@@ -5,12 +5,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Inventory } from './inventory.entity';
+import { Supply } from 'src/modules/supplies/entities/supply.entity';
 
 @Entity()
 export class Product {
@@ -70,4 +72,7 @@ export class Product {
 
   @OneToMany(() => Inventory, (inventory) => inventory.product)
   inventories: Inventory[];
+
+  @ManyToMany(() => Supply, (supplier) => supplier.products)
+  suppliers: Supply[];
 }

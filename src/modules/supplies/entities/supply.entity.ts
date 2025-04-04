@@ -1,8 +1,11 @@
+import { Product } from 'src/modules/products/entities/product.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -32,4 +35,8 @@ export class Supply {
 
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
+
+  @ManyToMany(() => Product, (product) => product.suppliers)
+  @JoinTable({ name: 'suppliers_products' })
+  products: Product[];
 }
