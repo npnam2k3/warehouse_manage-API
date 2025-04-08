@@ -1,0 +1,229 @@
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { CreateImportOrderDto } from './dto/create-import-order.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ImportOrder } from './entities/import-order.entity';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
+import { ImportOrderDetail } from './entities/import-order-detail.entity';
+import { Inventory } from '../products/entities/inventory.entity';
+import * as crypto from 'crypto';
+import { ERROR_MESSAGE } from 'src/constants/exception.message';
+import { PaymentStatus } from './enum';
+import { ImportProductDTO } from './dto/product-import.dto';
+import { Supply } from '../supplies/entities/supply.entity';
+import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
+import { Product } from '../products/entities/product.entity';
+import { Warehouse } from '../warehouse/entities/warehouse.entity';
+
+@Injectable()
+export class ImportOrderService {
+  constructor(
+    @InjectRepository(ImportOrder)
+    private readonly importOrderRepository: Repository<ImportOrder>,
+    private dataSource: DataSource,
+  ) {}
+  async create(createImportOrderDto: CreateImportOrderDto) {
+    const {
+      supplierId,
+      amount_due,
+      amount_paid,
+      listProducts,
+      note,
+      payment_due_date,
+      payment_status,
+    } = createImportOrderDto;
+    if (listProducts.length === 0)
+      throw new BadRequestException(ERROR_MESSAGE.LIST_PRODUCT_EMPTY);
+    return await this.dataSource.transaction(async (manager) => {
+      const supplier = await manager.findOne(Supply, {
+        where: { id: supplierId },
+        relations: ['products'],
+      });
+      if (!supplier) {
+        throw new NotFoundException(
+          ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.SUPPLIER),
+        );
+      }
+      // Kiểm tra xem các sản phẩm trong listProducts có hợp lệ không
+      const supplierProductIds = supplier.products.map((p) => p.id);
+      const invalidProducts = listProducts.filter(
+        (p) => !supplierProductIds.includes(p.productId),
+      );
+      if (invalidProducts.length > 0) {
+        throw new BadRequestException(ERROR_MESSAGE.INVALID_LIST_PRODUCT);
+      }
+
+      const total_amount = this.calcTotalAmount(listProducts);
+      const newOrder = manager.create(ImportOrder, {
+        import_order_code: this.generateImportOrder(),
+        total_amount,
+        supplier,
+      });
+      if (note) newOrder.note = note;
+      newOrder.payment_status = payment_status;
+      if (payment_status === PaymentStatus.UNPAID) {
+        newOrder.payment_due_date = payment_due_date;
+        newOrder.amount_due = total_amount;
+      } else if (payment_status === PaymentStatus.PARTIALLY_PAID) {
+        newOrder.payment_due_date = payment_due_date;
+        newOrder.amount_paid = amount_paid;
+        newOrder.amount_due = amount_due;
+      } else {
+        newOrder.amount_due = 0;
+        newOrder.amount_paid = total_amount;
+      }
+      // console.log('new order:: ', newOrder);
+      const savedOrder = await manager.save(newOrder);
+
+      const productIds = listProducts.map((p) => p.productId);
+      const warehouseIds = listProducts.map((p) => p.warehouseId);
+      const products = await manager.findByIds(Product, productIds);
+      const warehouses = await manager.findByIds(Warehouse, warehouseIds);
+
+      // map product: [id: product]: truy xuất vào id product sẽ ánh xạ ra value là object product
+      const productMap = new Map(products.map((p) => [p.id, p]));
+
+      // map warehouse: [id: warehouse]: truy xuất vào id warehouse sẽ ánh xạ ra value là object warehouse
+      const warehouseMap = new Map(warehouses.map((w) => [w.id, w]));
+
+      let uniqueProducts: ImportProductDTO[] = [];
+      for (const product of listProducts) {
+        const existing = uniqueProducts.find(
+          (p) =>
+            p.productId === product.productId &&
+            p.warehouseId === product.warehouseId,
+        );
+        if (existing) {
+          existing.quantity += product.quantity;
+        } else {
+          uniqueProducts.push({
+            productId: product.productId,
+            warehouseId: product.warehouseId,
+            purchase_price: product.purchase_price,
+            quantity: product.quantity,
+          });
+        }
+      }
+
+      const importOrderDetails = uniqueProducts.map((product) =>
+        manager.create(ImportOrderDetail, {
+          import_order: savedOrder,
+          product: productMap.get(product.productId),
+          warehouse: warehouseMap.get(product.warehouseId),
+          purchase_price: product.purchase_price,
+          quantity: product.quantity,
+        }),
+      );
+      await manager.insert(ImportOrderDetail, importOrderDetails);
+
+      // cap nhat so luong trong bang Inventory
+      // Lấy tất cả bản ghi Inventory với productIds
+      const inventoryRecords = await manager.find(Inventory, {
+        where: { product: { id: In(productIds) } },
+        relations: ['product', 'warehouse'],
+      });
+      // console.log('check inventoryRecords:: ', inventoryRecords);
+
+      // Xử lý Inventory
+      const inventoriesToSave: Inventory[] = [];
+      for (const product of uniqueProducts) {
+        // Tìm bản ghi với warehouseId cụ thể
+        let inventory = inventoryRecords.find(
+          (inv) =>
+            inv.product.id === product.productId &&
+            inv.warehouse?.id === product.warehouseId,
+        );
+
+        if (inventory) {
+          // console.log('Tồn tại warehouse id chỉ định này!!');
+          // Nếu đã có bản ghi cho kho này, cộng dồn quantity
+          inventory.quantity += product.quantity;
+          inventoriesToSave.push(inventory);
+        } else {
+          // Tìm bản ghi với warehouseId = null
+          inventory = inventoryRecords.find(
+            (inv) =>
+              inv.product.id === product.productId && inv.warehouse === null,
+          );
+
+          if (inventory) {
+            // console.log('Tồn tại warehouse id null');
+            // Nếu có bản ghi null, cập nhật warehouseId và quantity
+            inventory.quantity = product.quantity;
+            inventory.warehouse = warehouseMap.get(product.warehouseId) || null;
+            inventoriesToSave.push(inventory);
+          } else {
+            // console.log('Tạo mới inventory');
+            // Nếu không có bản ghi nào, tạo mới
+            const newInventory = manager.create(Inventory, {
+              productId: product.productId,
+              warehouseId: product.warehouseId,
+              quantity: product.quantity,
+              product: productMap.get(product.productId),
+              warehouse: warehouseMap.get(product.warehouseId),
+            });
+            inventoriesToSave.push(newInventory);
+          }
+        }
+      }
+      // console.log('check inventory to save:: ', inventoriesToSave);
+
+      //Lưu tất cả thay đổi Inventory trong 1 lần
+      if (inventoriesToSave.length > 0) {
+        await manager.save(Inventory, inventoriesToSave);
+      }
+
+      return savedOrder;
+    });
+  }
+
+  findAll() {
+    return `This action returns all importOrder`;
+  }
+
+  async findOne(id: number) {
+    const importOrderFound = await this.importOrderRepository.findOne({
+      where: { id },
+      relations: [
+        'supplier',
+        'import_order_details',
+        'import_order_details.product',
+        'paymentDetails',
+        'paymentDetails.payment',
+      ],
+    });
+    if (!importOrderFound)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.IMPORT_ORDER),
+      );
+
+    return importOrderFound;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} importOrder`;
+  }
+
+  generateImportOrder(): string {
+    const prefix = 'DN';
+    const timestamp = Date.now().toString(36).slice(-4).toUpperCase(); // Lấy 4 ký tự cuối của timestamp base36
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let randomStr = '';
+    const bytes = crypto.randomBytes(4); // 4 ký tự ngẫu nhiên
+
+    for (let i = 0; i < 4; i++) {
+      randomStr += characters[bytes[i] % characters.length];
+    }
+
+    return `${prefix}${timestamp}${randomStr}`; // SP (2) + timestamp (4) + random (4) = 10 ký tự
+  }
+
+  calcTotalAmount(listProducts: ImportProductDTO[]): number {
+    return listProducts.reduce((total_amount, curr) => {
+      return total_amount + curr.quantity * curr.purchase_price;
+    }, 0);
+  }
+}

@@ -8,4 +8,5 @@ export const RESPONSE_MESSAGE = {
   UNBLOCK: 'Đã mở khóa tài khoản thành công.',
   CHANGE_PASSWORD: 'Đổi mật khẩu thành công.',
   SEND_EMAIL: 'Gửi email thành công.',
+  PAYMENT: 'Thanh toán thành công',
 };

@@ -1,3 +1,4 @@
+import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Role } from 'src/modules/roles/entities/role.entity';
 import {
   Column,
@@ -5,6 +6,7 @@ import {
   DeleteDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -49,4 +51,7 @@ export class User {
 
   @ManyToOne(() => Role, (role) => role.users)
   role: Role;
+
+  @OneToMany(() => Payment, (payment) => payment.user)
+  payments: Payment[];
 }

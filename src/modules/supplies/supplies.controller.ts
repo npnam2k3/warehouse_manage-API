@@ -12,6 +12,8 @@ import { CreateSupplyDto } from './dto/create-supply.dto';
 import { UpdateSupplyDto } from './dto/update-supply.dto';
 import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
+import { SupplierProductDto } from './dto/create-supplier-product.dto';
+import { DeleteProductSupplierDto } from './dto/delete-supplier-product.dto';
 
 @Controller('supplies')
 export class SuppliesController {
@@ -42,5 +44,21 @@ export class SuppliesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.suppliesService.remove(+id);
+  }
+
+  @Post('add-product-to-supplier')
+  @ResponseMessage(RESPONSE_MESSAGE.CREATE)
+  addProductToSupplier(@Body() createSupplierProductDto: SupplierProductDto) {
+    return this.suppliesService.addProductsToSupplier(createSupplierProductDto);
+  }
+
+  @Post('delete-product-from-supplier')
+  @ResponseMessage(RESPONSE_MESSAGE.DELETE)
+  deleteProductFromSupplier(
+    @Body() deleteSupplierProductDto: DeleteProductSupplierDto,
+  ) {
+    return this.suppliesService.deleteProductFromSupplier(
+      deleteSupplierProductDto,
+    );
   }
 }

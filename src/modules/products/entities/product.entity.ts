@@ -13,6 +13,7 @@ import {
 } from 'typeorm';
 import { Inventory } from './inventory.entity';
 import { Supply } from 'src/modules/supplies/entities/supply.entity';
+import { ImportOrderDetail } from 'src/modules/import-order/entities/import-order-detail.entity';
 
 @Entity()
 export class Product {
@@ -75,4 +76,10 @@ export class Product {
 
   @ManyToMany(() => Supply, (supplier) => supplier.products)
   suppliers: Supply[];
+
+  @OneToMany(
+    () => ImportOrderDetail,
+    (importOrderDetail) => importOrderDetail.product,
+  )
+  import_order_details: ImportOrderDetail[];
 }

@@ -146,8 +146,18 @@ export class ProductsService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: number) {
+    const productExists = await this.productRepository.findOne({
+      where: { id },
+      relations: ['suppliers'],
+    });
+
+    if (!productExists) {
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.PRODUCT),
+      );
+    }
+    return productExists;
   }
 
   async update(id: number, updateProductDto: UpdateProductDto, file: any) {

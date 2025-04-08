@@ -18,6 +18,8 @@ import { CustomersModule } from './modules/customers/customers.module';
 import { ProductsModule } from './modules/products/products.module';
 import { UnitModule } from './modules/unit/unit.module';
 import { SuppliesModule } from './modules/supplies/supplies.module';
+import { ImportOrderModule } from './modules/import-order/import-order.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { SuppliesModule } from './modules/supplies/supplies.module';
     ProductsModule,
     UnitModule,
     SuppliesModule,
+    ImportOrderModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [
