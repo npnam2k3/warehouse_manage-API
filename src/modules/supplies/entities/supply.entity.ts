@@ -1,3 +1,4 @@
+import { ImportOrder } from 'src/modules/import-order/entities/import-order.entity';
 import { Product } from 'src/modules/products/entities/product.entity';
 import {
   Column,
@@ -6,6 +7,7 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -39,4 +41,7 @@ export class Supply {
   @ManyToMany(() => Product, (product) => product.suppliers)
   @JoinTable({ name: 'suppliers_products' })
   products: Product[];
+
+  @OneToMany(() => ImportOrder, (importOrder) => importOrder.supplier)
+  importOrders: ImportOrder[];
 }

@@ -37,6 +37,21 @@ export const ERROR_MESSAGE = {
 
   UPLOAD_FILE_FAILED: 'Lỗi upload file',
 
+  LIST_PRODUCT_EMPTY: 'Danh sách sản phẩm trống',
+
+  LIST_PRODUCT_NOT_FOUND: 'Có vài sản phẩm trong danh sách không tồn tại',
+
+  INVALID_LIST_PRODUCT: 'Nhà cung cấp không có những sản phẩm này',
+
+  CANNOT_UPDATE_IMPORT_ORDER: 'Không thể cập nhật hóa đơn vì xung đột số lượng',
+
+  REQUIRED_PAYMENT_DUE_DATE: 'Ngày gia hạn thanh toán là bắt buộc',
+
+  INVALID_PAYMENT_DUE_DATE: 'Ngày gia hạn phải sau ngày hôm nay',
+
+  INVALID_PAYMENT_AMOUNT:
+    'Số tiền thanh toán phải bằng số tiền đang nợ trong hóa đơn',
+
   DELETE_FAILED: (entity1: string, entity2: string) =>
     `Không thể xóa ${entity1} do đã tồn tại ${entity2} bên trong`,
 

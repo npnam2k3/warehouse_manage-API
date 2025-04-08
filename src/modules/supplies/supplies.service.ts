@@ -8,17 +8,22 @@ import { CreateSupplyDto } from './dto/create-supply.dto';
 import { UpdateSupplyDto } from './dto/update-supply.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Supply } from './entities/supply.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, In, Repository } from 'typeorm';
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
 import { getInfoObject } from 'src/utils/compareObject';
 import { isEmpty, isEqual, omitBy } from 'lodash';
+import { SupplierProductDto } from './dto/create-supplier-product.dto';
+import { Product } from '../products/entities/product.entity';
+import { DeleteProductSupplierDto } from './dto/delete-supplier-product.dto';
 
 @Injectable()
 export class SuppliesService {
   constructor(
     @InjectRepository(Supply)
     private readonly supplierRepository: Repository<Supply>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
   ) {}
   async create(createSupplyDto: CreateSupplyDto) {
     const { name_company, address, email, phone } = createSupplyDto;
@@ -118,5 +123,57 @@ export class SuppliesService {
 
   remove(id: number) {
     return `This action removes a #${id} supply`;
+  }
+
+  async addProductsToSupplier(createSupplierProductDto: SupplierProductDto) {
+    const { supplierId, listIdProducts } = createSupplierProductDto;
+    const supplier = await this.supplierRepository.findOne({
+      where: { id: supplierId },
+      relations: ['products'],
+    });
+    if (!supplier) {
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.SUPPLIER),
+      );
+    }
+
+    const idProductsNotExists = listIdProducts.filter(
+      (id) => !supplier?.products.some((p) => p.id === +id),
+    );
+
+    const productsToAdd = await this.productRepository.find({
+      where: { id: In(idProductsNotExists) },
+    });
+
+    if (productsToAdd.length !== idProductsNotExists.length) {
+      throw new NotFoundException(ERROR_MESSAGE.LIST_PRODUCT_NOT_FOUND);
+    }
+    supplier.products = [...supplier.products, ...productsToAdd];
+    return await this.supplierRepository.save(supplier);
+  }
+
+  async deleteProductFromSupplier(
+    deleteSupplierProductDto: DeleteProductSupplierDto,
+  ) {
+    const { productId, supplierId } = deleteSupplierProductDto;
+    const supplier = await this.supplierRepository.findOne({
+      where: { id: supplierId },
+      relations: ['products'],
+    });
+    if (!supplier) {
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.SUPPLIER),
+      );
+    }
+
+    const listIdProducts = supplier.products.map((p) => p.id);
+    const checkExists = listIdProducts.some((id) => id === productId);
+    if (!checkExists)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.PRODUCT),
+      );
+
+    supplier.products = supplier.products.filter((p) => p.id !== productId);
+    await this.supplierRepository.save(supplier);
   }
 }
