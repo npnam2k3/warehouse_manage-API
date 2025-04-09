@@ -180,8 +180,66 @@ export class ImportOrderService {
     });
   }
 
-  findAll() {
-    return `This action returns all importOrder`;
+  async findAll({ pageNum, limitNum, search, status, sortBy, orderBy }) {
+    const queryBuilder = this.importOrderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.supplier', 'supplier');
+
+    let hasCondition = false;
+    let findByCode = false;
+    if (search) {
+      const isOrderCode = /^DN[A-Za-z0-9]+$/.test(search);
+      if (isOrderCode) {
+        queryBuilder.where('order.import_order_code = :code', { code: search });
+        findByCode = true;
+      } else {
+        queryBuilder.where('supplier.name_company LIKE :name', {
+          name: `%${search}%`,
+        });
+      }
+      hasCondition = true;
+    }
+
+    if (status && !findByCode) {
+      if (hasCondition) {
+        queryBuilder.andWhere('order.payment_status = :status', { status });
+      } else {
+        queryBuilder.where('order.payment_status = :status', { status });
+      }
+    }
+
+    const validSortFields = [
+      'total_amount',
+      'createdAt',
+      'amount_paid',
+      'amount_due',
+      'payment_due_date',
+    ];
+    if (sortBy && validSortFields.includes(sortBy)) {
+      const order = orderBy?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+      queryBuilder.orderBy(`order.${sortBy}`, order);
+    } else {
+      queryBuilder.orderBy('order.total_amount', 'DESC'); // Mặc định
+    }
+
+    const [orders, totalRecords] = await queryBuilder
+      .skip((pageNum - 1) * limitNum)
+      .take(limitNum)
+      .getManyAndCount();
+
+    return {
+      orders,
+      totalRecords,
+      totalPages: Math.ceil(totalRecords / limitNum),
+      conditions: {
+        pageNum,
+        limitNum,
+        search,
+        status,
+        sortBy,
+        orderBy,
+      },
+    };
   }
 
   async findOne(id: number) {
