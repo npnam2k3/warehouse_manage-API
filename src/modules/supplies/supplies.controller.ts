@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { SuppliesService } from './supplies.service';
 import { CreateSupplyDto } from './dto/create-supply.dto';
@@ -14,6 +15,7 @@ import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
 import { SupplierProductDto } from './dto/create-supplier-product.dto';
 import { DeleteProductSupplierDto } from './dto/delete-supplier-product.dto';
+import { PAGINATION } from 'src/constants/pagination';
 
 @Controller('supplies')
 export class SuppliesController {
@@ -26,11 +28,29 @@ export class SuppliesController {
   }
 
   @Get()
-  findAll() {
-    return this.suppliesService.findAll();
+  @ResponseMessage(RESPONSE_MESSAGE.GET)
+  findAll(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Query('search') search?: string,
+    @Query('isDebt') isDebt?: string,
+    @Query('sortBy') sortBy: string = 'name_company',
+    @Query('orderBy') orderBy: 'ASC' | 'DESC' = 'DESC',
+  ) {
+    const pageNum = page ? page : PAGINATION.SUPPLIER.PAGE_NUMBER;
+    const limitNum = limit ? limit : PAGINATION.SUPPLIER.LIMIT_NUMBER;
+    return this.suppliesService.findAll({
+      pageNum,
+      limitNum,
+      search,
+      isDebt,
+      sortBy,
+      orderBy,
+    });
   }
 
   @Get(':id')
+  @ResponseMessage(RESPONSE_MESSAGE.GET)
   findOne(@Param('id') id: string) {
     return this.suppliesService.findOne(+id);
   }
