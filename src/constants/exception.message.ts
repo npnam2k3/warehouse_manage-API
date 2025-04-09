@@ -52,6 +52,9 @@ export const ERROR_MESSAGE = {
   INVALID_PAYMENT_AMOUNT:
     'Số tiền thanh toán phải bằng số tiền đang nợ trong hóa đơn',
 
+  CANNOT_DELETE_SUPPLIER_CUSTOMER: (entity) =>
+    `Không thể xóa ${entity} vì còn công nợ.`,
+
   DELETE_FAILED: (entity1: string, entity2: string) =>
     `Không thể xóa ${entity1} do đã tồn tại ${entity2} bên trong`,
 

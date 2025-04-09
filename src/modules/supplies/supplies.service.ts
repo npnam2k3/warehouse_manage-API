@@ -16,6 +16,9 @@ import { isEmpty, isEqual, omitBy } from 'lodash';
 import { SupplierProductDto } from './dto/create-supplier-product.dto';
 import { Product } from '../products/entities/product.entity';
 import { DeleteProductSupplierDto } from './dto/delete-supplier-product.dto';
+import { ImportOrder } from '../import-order/entities/import-order.entity';
+import { PaymentStatus } from '../import-order/enum';
+import { IsDebt } from './enum';
 
 @Injectable()
 export class SuppliesService {
@@ -48,12 +51,182 @@ export class SuppliesService {
     return await this.supplierRepository.save(newSupplier);
   }
 
-  findAll() {
-    return `This action returns all supplies`;
+  async findAll({ pageNum, limitNum, search, isDebt, sortBy, orderBy }) {
+    const queryBuilder = this.supplierRepository
+      .createQueryBuilder('supplier')
+      .leftJoinAndSelect('supplier.importOrders', 'importOrders');
+
+    // tìm kiếm theo tên NCC
+    if (search) {
+      queryBuilder.where('supplier.name_company LIKE :name', {
+        name: `%${search}%`,
+      });
+    }
+
+    // lọc theo công nợ
+    if (isDebt === IsDebt.YES) {
+      queryBuilder
+        .andWhere((qb) => {
+          const subQuery = qb
+            .subQuery()
+            .select('1')
+            .from('import_order', 'io')
+            .where('io.supplierId = supplier.id')
+            .andWhere('io.payment_status IN (:...statuses)')
+            .getQuery();
+          return `EXISTS ${subQuery}`;
+        })
+        .setParameter('statuses', [
+          PaymentStatus.UNPAID,
+          PaymentStatus.PARTIALLY_PAID,
+        ]);
+    } else if (isDebt === IsDebt.NO) {
+      queryBuilder
+        .andWhere((qb) => {
+          const subQuery = qb
+            .subQuery()
+            .select('1')
+            .from('import_order', 'io')
+            .where('io.supplierId = supplier.id')
+            .andWhere('io.payment_status IN (:...statuses)')
+            .getQuery();
+          return `NOT EXISTS ${subQuery}`;
+        })
+        .setParameter('statuses', [
+          PaymentStatus.UNPAID,
+          PaymentStatus.PARTIALLY_PAID,
+        ]);
+    }
+
+    // sắp xếp
+    const validSortFields = ['name_company', 'email', 'phone', 'address'];
+    if (sortBy && validSortFields.includes(sortBy)) {
+      const order = orderBy?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+      queryBuilder.orderBy(`supplier.${sortBy}`, order);
+    } else {
+      queryBuilder.orderBy('supplier.name_company', 'DESC'); // Mặc định
+    }
+
+    // phân trang
+    const [suppliers, totalRecords] = await queryBuilder
+      .skip((pageNum - 1) * limitNum)
+      .take(limitNum)
+      .getManyAndCount();
+
+    // Thêm trường isDebt vào từng supplier
+    const suppliersWithDebt = suppliers.map((supplier) => {
+      const hasDebt = supplier.importOrders?.some(
+        (order) =>
+          order.payment_status === PaymentStatus.UNPAID ||
+          order.payment_status === PaymentStatus.PARTIALLY_PAID,
+      );
+      return {
+        ...supplier,
+        hasDebt,
+      };
+    });
+    return {
+      suppliers: suppliersWithDebt,
+      totalRecords,
+      totalPages: Math.ceil(totalRecords / limitNum),
+      conditions: {
+        pageNum,
+        limitNum,
+        search,
+        isDebt,
+        sortBy,
+        orderBy,
+      },
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} supply`;
+  async findOne(idOrder: number) {
+    const supplierExists = await this.supplierRepository.findOne({
+      where: { id: idOrder },
+      relations: {
+        importOrders: {
+          import_order_details: {
+            product: true,
+          },
+          paymentDetails: {
+            payment: {
+              user: true,
+            },
+          },
+        },
+        products: true,
+      },
+    });
+    if (!supplierExists)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.SUPPLIER),
+      );
+    const infoSupplier = {
+      id: supplierExists.id,
+      name_company: supplierExists.name_company,
+      email: supplierExists.email,
+      phone: supplierExists.phone,
+      address: supplierExists.address,
+    };
+
+    let listOrderFormatted: any = [];
+    if (supplierExists.importOrders?.length > 0) {
+      listOrderFormatted = supplierExists.importOrders.map((order) => {
+        return {
+          idOrder: order.id,
+          import_order_code: order.import_order_code,
+          total_amount: order.total_amount,
+          payment_status: order.payment_status,
+          payment_due_date: order.payment_due_date,
+          amount_paid: order.amount_paid,
+          amount_due: order.amount_due,
+          note: order.note,
+          createdAt: order.createdAt,
+          list_product_in_order:
+            order.import_order_details.length > 0
+              ? order.import_order_details?.map((detail) => {
+                  return {
+                    idProduct: detail.product?.id,
+                    product_code: detail.product?.product_code,
+                    name: detail.product?.name,
+                    purchase_price: detail.purchase_price,
+                    imageUrl: detail.product?.imageUrl,
+                    quantity: detail.quantity,
+                  };
+                })
+              : [],
+          list_payments:
+            order.paymentDetails.length > 0
+              ? order.paymentDetails?.map((detail) => {
+                  return {
+                    idPayment: detail.payment?.id,
+                    payment_date: detail.payment?.payment_date,
+                    payment_method: detail.payment?.payment_method,
+                    userCreated: {
+                      username: detail.payment?.user?.username,
+                      fullname: detail.payment?.user?.fullname,
+                      email: detail.payment?.user?.email,
+                    },
+                    amount: detail.amount,
+                  };
+                })
+              : [],
+        };
+      });
+    }
+
+    // tính tổng nợ NCC
+    const total_debt = this.calcTotalDebtOfSupplier(
+      supplierExists.importOrders,
+    );
+
+    return {
+      ...infoSupplier,
+      total_debt,
+      listOrders: listOrderFormatted,
+      listProducts:
+        supplierExists.products.length > 0 ? supplierExists.products : [],
+    };
   }
 
   async update(id: number, updateSupplyDto: UpdateSupplyDto) {
@@ -121,8 +294,28 @@ export class SuppliesService {
     await this.supplierRepository.update(id, changeFields);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} supply`;
+  async remove(id: number) {
+    const supplierExists = await this.supplierRepository.findOne({
+      where: { id },
+      relations: {
+        importOrders: true,
+      },
+    });
+    if (!supplierExists)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.SUPPLIER),
+      );
+    const hasDebt = supplierExists?.importOrders.some(
+      (order) => order.payment_status !== PaymentStatus.PAID,
+    );
+    if (hasDebt) {
+      throw new BadRequestException(
+        ERROR_MESSAGE.CANNOT_DELETE_SUPPLIER_CUSTOMER(
+          ENTITIES_MESSAGE.SUPPLIER,
+        ),
+      );
+    }
+    await this.supplierRepository.softRemove(supplierExists);
   }
 
   async addProductsToSupplier(createSupplierProductDto: SupplierProductDto) {
@@ -175,5 +368,19 @@ export class SuppliesService {
 
     supplier.products = supplier.products.filter((p) => p.id !== productId);
     await this.supplierRepository.save(supplier);
+  }
+
+  calcTotalDebtOfSupplier(list_orders: ImportOrder[]): number {
+    let total_debt = 0;
+    if (list_orders.length === 0) return 0;
+    for (const order of list_orders) {
+      if (
+        order.payment_status === PaymentStatus.PARTIALLY_PAID ||
+        order.payment_status === PaymentStatus.UNPAID
+      ) {
+        total_debt += order.amount_due;
+      }
+    }
+    return total_debt;
   }
 }
