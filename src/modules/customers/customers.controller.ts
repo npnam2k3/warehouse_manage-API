@@ -31,6 +31,7 @@ export class CustomersController {
     @Query('page') page: number,
     @Query('limit') limit: number,
     @Query('search') search?: string,
+    @Query('isDebt') isDebt?: string,
     @Query('sortBy') sortBy: string = 'createdAt',
     @Query('orderBy') orderBy: 'ASC' | 'DESC' = 'DESC',
   ) {
@@ -40,6 +41,7 @@ export class CustomersController {
       pageNum,
       limitNum,
       search,
+      isDebt,
       sortBy,
       orderBy,
     });

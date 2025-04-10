@@ -11,8 +11,11 @@ import { Customer } from './entities/customer.entity';
 import { Brackets, Repository } from 'typeorm';
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
-import { compareObject, getInfoObject } from 'src/utils/compareObject';
+import { getInfoObject } from 'src/utils/compareObject';
 import { isEmpty, isEqual, omitBy } from 'lodash';
+import { ExportOrder } from '../export-order/entities/export-order.entity';
+import { PaymentStatus } from '../import-order/enum';
+import { IsDebt } from '../supplies/enum';
 
 @Injectable()
 export class CustomersService {
@@ -43,37 +46,89 @@ export class CustomersService {
     return await this.customerRepository.save(newCustomer);
   }
 
-  async findAll({ pageNum, limitNum, search, sortBy, orderBy }) {
-    const queryBuilder = this.customerRepository.createQueryBuilder('customer');
+  async findAll({ pageNum, limitNum, isDebt, search, sortBy, orderBy }) {
+    const queryBuilder = this.customerRepository
+      .createQueryBuilder('customer')
+      .leftJoinAndSelect('customer.exportOrders', 'exportOrders');
 
-    // 1. search
+    // tìm kiếm theo tên KH
     if (search) {
-      queryBuilder.where('customer.fullname LIKE :search', {
-        search: `%${search}%`,
+      queryBuilder.where('customer.fullname LIKE :name', {
+        name: `%${search}%`,
       });
     }
 
-    // 2. sort
-    if (sortBy) {
-      const order = orderBy.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-      queryBuilder.orderBy(`customer.${sortBy}`, order);
+    // lọc theo công nợ
+    if (isDebt === IsDebt.YES) {
+      queryBuilder
+        .andWhere((qb) => {
+          const subQuery = qb
+            .subQuery()
+            .select('1')
+            .from('export_order', 'eo')
+            .where('eo.customerId = customer.id')
+            .andWhere('eo.payment_status IN (:...statuses)')
+            .getQuery();
+          return `EXISTS ${subQuery}`;
+        })
+        .setParameter('statuses', [
+          PaymentStatus.UNPAID,
+          PaymentStatus.PARTIALLY_PAID,
+        ]);
+    } else if (isDebt === IsDebt.NO) {
+      queryBuilder
+        .andWhere((qb) => {
+          const subQuery = qb
+            .subQuery()
+            .select('1')
+            .from('export_order', 'eo')
+            .where('eo.customerId = customer.id')
+            .andWhere('eo.payment_status IN (:...statuses)')
+            .getQuery();
+          return `NOT EXISTS ${subQuery}`;
+        })
+        .setParameter('statuses', [
+          PaymentStatus.UNPAID,
+          PaymentStatus.PARTIALLY_PAID,
+        ]);
     }
 
-    //3. pagination
-    const totalRecords = await queryBuilder.getCount();
-    const customers = await queryBuilder
+    // sắp xếp
+    const validSortFields = ['fullname', 'email', 'phone', 'address'];
+    if (sortBy && validSortFields.includes(sortBy)) {
+      const order = orderBy?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+      queryBuilder.orderBy(`customer.${sortBy}`, order);
+    } else {
+      queryBuilder.orderBy('customer.fullname', 'DESC'); // Mặc định
+    }
+
+    // phân trang
+    const [customers, totalRecords] = await queryBuilder
       .skip((pageNum - 1) * limitNum)
       .take(limitNum)
-      .getMany();
+      .getManyAndCount();
 
+    // Thêm trường isDebt vào từng customer
+    const customersWithDebt = customers.map((customer) => {
+      const hasDebt = customer.exportOrders?.some(
+        (order) =>
+          order.payment_status === PaymentStatus.UNPAID ||
+          order.payment_status === PaymentStatus.PARTIALLY_PAID,
+      );
+      return {
+        ...customer,
+        hasDebt,
+      };
+    });
     return {
-      customers,
+      customers: customersWithDebt,
       totalRecords,
       totalPages: Math.ceil(totalRecords / limitNum),
       conditions: {
         pageNum,
         limitNum,
         search,
+        isDebt,
         sortBy,
         orderBy,
       },
@@ -83,13 +138,88 @@ export class CustomersService {
   async findOne(id: number) {
     const customerExists = await this.customerRepository.findOne({
       where: { id },
+      relations: {
+        exportOrders: {
+          export_order_details: {
+            product: true,
+          },
+          paymentDetails: {
+            payment: {
+              user: true,
+            },
+          },
+        },
+      },
     });
     if (!customerExists)
       throw new NotFoundException(
         ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.CUSTOMER),
       );
 
-    return customerExists;
+    const infoCustomer = {
+      id: customerExists.id,
+      fullname: customerExists.fullname,
+      email: customerExists.email,
+      phone: customerExists.phone,
+      address: customerExists.address,
+    };
+
+    let listOrderFormatted: any = [];
+    if (customerExists.exportOrders?.length > 0) {
+      listOrderFormatted = customerExists.exportOrders.map((order) => {
+        return {
+          idOrder: order.id,
+          import_order_code: order.export_order_code,
+          total_amount: order.total_amount,
+          payment_status: order.payment_status,
+          payment_due_date: order.payment_due_date,
+          amount_paid: order.amount_paid,
+          amount_due: order.amount_due,
+          note: order.note,
+          createdAt: order.createdAt,
+          list_product_in_order:
+            order.export_order_details.length > 0
+              ? order.export_order_details?.map((detail) => {
+                  return {
+                    idProduct: detail.product?.id,
+                    product_code: detail.product?.product_code,
+                    name: detail.product?.name,
+                    purchase_price: detail.sell_price,
+                    imageUrl: detail.product?.imageUrl,
+                    quantity: detail.quantity,
+                  };
+                })
+              : [],
+          list_payments:
+            order.paymentDetails.length > 0
+              ? order.paymentDetails?.map((detail) => {
+                  return {
+                    idPayment: detail.payment?.id,
+                    payment_date: detail.payment?.payment_date,
+                    payment_method: detail.payment?.payment_method,
+                    userCreated: {
+                      username: detail.payment?.user?.username,
+                      fullname: detail.payment?.user?.fullname,
+                      email: detail.payment?.user?.email,
+                    },
+                    amount: detail.amount,
+                  };
+                })
+              : [],
+        };
+      });
+    }
+
+    // tính tổng nợ KH
+    const total_debt = this.calcTotalDebtOfCustomer(
+      customerExists.exportOrders,
+    );
+
+    return {
+      ...infoCustomer,
+      total_debt,
+      listOrders: listOrderFormatted,
+    };
   }
 
   async update(id: number, updateCustomerDto: UpdateCustomerDto) {
@@ -160,12 +290,39 @@ export class CustomersService {
   async remove(id: number) {
     const customerExists = await this.customerRepository.findOne({
       where: { id },
+      relations: {
+        exportOrders: true,
+      },
     });
     if (!customerExists)
       throw new NotFoundException(
         ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.CUSTOMER),
       );
 
+    const hasDebt = customerExists?.exportOrders.some(
+      (order) => order.payment_status !== PaymentStatus.PAID,
+    );
+    if (hasDebt) {
+      throw new BadRequestException(
+        ERROR_MESSAGE.CANNOT_DELETE_SUPPLIER_CUSTOMER(
+          ENTITIES_MESSAGE.CUSTOMER,
+        ),
+      );
+    }
     await this.customerRepository.softRemove(customerExists);
+  }
+
+  calcTotalDebtOfCustomer(list_orders: ExportOrder[]): number {
+    let total_debt = 0;
+    if (list_orders.length === 0) return 0;
+    for (const order of list_orders) {
+      if (
+        order.payment_status === PaymentStatus.PARTIALLY_PAID ||
+        order.payment_status === PaymentStatus.UNPAID
+      ) {
+        total_debt += order.amount_due;
+      }
+    }
+    return total_debt;
   }
 }
