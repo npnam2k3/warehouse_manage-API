@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Payment } from './payment.entity';
 import { ImportOrder } from 'src/modules/import-order/entities/import-order.entity';
+import { ExportOrder } from 'src/modules/export-order/entities/export-order.entity';
 
 @Entity()
 export class PaymentDetail {
@@ -30,6 +31,9 @@ export class PaymentDetail {
 
   @ManyToOne(() => ImportOrder, (importOrder) => importOrder.paymentDetails)
   import_order: ImportOrder;
+
+  @ManyToOne(() => ExportOrder, (exportOrder) => exportOrder.paymentDetails)
+  export_order: ExportOrder;
 
   @CreateDateColumn()
   createdAt: Date;

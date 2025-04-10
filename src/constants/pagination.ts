@@ -19,4 +19,8 @@ export const PAGINATION = {
     PAGE_NUMBER: 1,
     LIMIT_NUMBER: 5,
   },
+  EXPORT_ORDER: {
+    PAGE_NUMBER: 1,
+    LIMIT_NUMBER: 5,
+  },
 };

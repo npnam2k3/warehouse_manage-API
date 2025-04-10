@@ -14,6 +14,7 @@ import {
 import { Inventory } from './inventory.entity';
 import { Supply } from 'src/modules/supplies/entities/supply.entity';
 import { ImportOrderDetail } from 'src/modules/import-order/entities/import-order-detail.entity';
+import { ExportOrderDetail } from 'src/modules/export-order/entities/export-order-detail.entity';
 
 @Entity()
 export class Product {
@@ -82,4 +83,10 @@ export class Product {
     (importOrderDetail) => importOrderDetail.product,
   )
   import_order_details: ImportOrderDetail[];
+
+  @OneToMany(
+    () => ExportOrderDetail,
+    (exportOrderDetail) => exportOrderDetail.product,
+  )
+  export_order_details: ExportOrderDetail[];
 }

@@ -20,6 +20,7 @@ import { UnitModule } from './modules/unit/unit.module';
 import { SuppliesModule } from './modules/supplies/supplies.module';
 import { ImportOrderModule } from './modules/import-order/import-order.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { ExportOrderModule } from './modules/export-order/export-order.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     SuppliesModule,
     ImportOrderModule,
     PaymentsModule,
+    ExportOrderModule,
   ],
   controllers: [AppController],
   providers: [
