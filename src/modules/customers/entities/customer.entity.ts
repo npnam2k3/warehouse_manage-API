@@ -1,8 +1,10 @@
+import { ExportOrder } from 'src/modules/export-order/entities/export-order.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -32,4 +34,7 @@ export class Customer {
 
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
+
+  @OneToMany(() => ExportOrder, (exportOrder) => exportOrder.customer)
+  exportOrders: ExportOrder[];
 }

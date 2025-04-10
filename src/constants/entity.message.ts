@@ -7,6 +7,7 @@ export const ENTITIES_MESSAGE = {
   PRODUCT: 'Sản phẩm',
   SUPPLIER: 'Nhà cung cấp',
   IMPORT_ORDER: 'Hóa đơn nhập',
+  EXPORT_ORDER: 'Hóa đơn xuất',
 
   JWT_ACCESS_TOKEN_KEY: 'jwt_access_token_secret',
   JWT_REFRESH_TOKEN_KEY: 'jwt_refresh_token_secret',

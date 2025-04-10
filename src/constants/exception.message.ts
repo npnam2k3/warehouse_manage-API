@@ -52,6 +52,15 @@ export const ERROR_MESSAGE = {
   INVALID_PAYMENT_AMOUNT:
     'Số tiền thanh toán phải bằng số tiền đang nợ trong hóa đơn',
 
+  SOMETHING_WRONG: 'Đã có lỗi gì đó xảy ra, vui lòng thử lại sau.',
+
+  INVALID_QUANTITY: (
+    productName: string,
+    quantityInStock: number,
+    requestedQuantity: number,
+  ) =>
+    `Sản phẩm "${productName}" hiện chỉ còn ${quantityInStock} trong kho, không đủ để đáp ứng yêu cầu số lượng ${requestedQuantity}. Vui lòng điều chỉnh số lượng hoặc chọn sản phẩm khác.`,
+
   CANNOT_DELETE_SUPPLIER_CUSTOMER: (entity) =>
     `Không thể xóa ${entity} vì còn công nợ.`,
 

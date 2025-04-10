@@ -11,6 +11,7 @@ import { CategoryModule } from '../category/category.module';
 import { UnitModule } from '../unit/unit.module';
 import { Supply } from '../supplies/entities/supply.entity';
 import { ImportOrderDetail } from '../import-order/entities/import-order-detail.entity';
+import { ExportOrderDetail } from '../export-order/entities/export-order-detail.entity';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ImportOrderDetail } from '../import-order/entities/import-order-detail.
       Inventory,
       Supply,
       ImportOrderDetail,
+      ExportOrderDetail,
     ]),
     CloudinaryModule,
     CategoryModule,

@@ -16,6 +16,7 @@ import { ImportOrder } from '../import-order/entities/import-order.entity';
 import { PaymentDetail } from './entities/payment-detail.entity';
 import { PaymentStatus } from '../import-order/enum';
 import { isDateValidString } from 'src/utils/handleDatetime';
+import { ExportOrder } from '../export-order/entities/export-order.entity';
 
 @Injectable()
 export class PaymentsService {
@@ -48,8 +49,9 @@ export class PaymentsService {
       const listIdOrder = list_orders.map((order) => order.order_id);
 
       // lay ra cac hoa don can thanh toan
-      let orderMap: Map<number, ImportOrder> = new Map();
+      let orderMap: Map<number, ImportOrder | ExportOrder> = new Map();
       let listImportOrders: ImportOrder[] = [];
+      let listExportOrders: ExportOrder[] = [];
       if (type === TypeOrderPayment.IMPORT) {
         // truong hop thanh toan cho hoa don nhap
         listImportOrders = await manager.find(ImportOrder, {
@@ -58,9 +60,10 @@ export class PaymentsService {
         orderMap = new Map(listImportOrders.map((p) => [p.id, p]));
       } else {
         // truong hop thanh toan cho don xuat
-        throw new BadRequestException(
-          'Payment for export orders is not supported yet',
-        );
+        listExportOrders = await manager.find(ExportOrder, {
+          where: { id: In(listIdOrder) },
+        });
+        orderMap = new Map(listExportOrders.map((p) => [p.id, p]));
       }
 
       // luu thong tin cua cac hoa don can thanh toan vao bang PaymentDetail
@@ -132,6 +135,61 @@ export class PaymentsService {
         }
       } else {
         // truong hop thanh toan cho don xuat
+        for (const order of list_orders) {
+          // lấy ra hóa đơn hiện tại
+          const orderCurrent = orderMap.get(order.order_id);
+          if (!orderCurrent)
+            throw new NotFoundException(
+              ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.EXPORT_ORDER),
+            );
+
+          // tạo bản ghi mới trong bảng PaymentDetail tương ứng với số hóa đơn cần thanh toán
+          const paymentDetail = manager.create(PaymentDetail, {
+            export_order: orderCurrent,
+            amount: order.amount,
+            payment: savedPayment,
+          });
+
+          // cập nhật lại hóa đơn cần thanh toán
+          if (order.payment_status === PaymentStatus.PARTIALLY_PAID) {
+            // nếu thanh toán 1 phần => cần gia hạn thêm thời gian thanh toán phần còn lại
+            const payment_due_date = order.payment_due_date;
+            if (!payment_due_date) {
+              throw new BadRequestException(
+                ERROR_MESSAGE.REQUIRED_PAYMENT_DUE_DATE,
+              );
+            }
+            if (!isDateValidString(payment_due_date)) {
+              throw new BadRequestException(
+                ERROR_MESSAGE.INVALID_PAYMENT_DUE_DATE,
+              );
+            }
+
+            const orderUpdate = {
+              id: order.order_id,
+              payment_status: order.payment_status,
+              amount_paid: order.amount + orderCurrent.amount_paid,
+              amount_due: orderCurrent.amount_due - order.amount,
+              payment_due_date,
+            };
+            orderToUpdate.push(orderUpdate);
+          } else if (order.payment_status === PaymentStatus.PAID) {
+            if (order.amount !== orderCurrent?.amount_due) {
+              throw new BadRequestException(
+                ERROR_MESSAGE.INVALID_PAYMENT_AMOUNT,
+              );
+            }
+            // nếu thanh toán full => chỉ cần cập nhật lại: payment_status, amount_paid, amount_due
+            const orderUpdate = {
+              id: order.order_id,
+              payment_status: order.payment_status,
+              amount_paid: order.amount + orderCurrent.amount_paid,
+              amount_due: 0,
+            };
+            orderToUpdate.push(orderUpdate);
+          }
+          paymentDetailToSave.push(paymentDetail);
+        }
       }
       // console.log('check payment detail to save:: ', paymentDetailToSave);
       // console.log('check order to update:: ', orderToUpdate);
@@ -140,16 +198,29 @@ export class PaymentsService {
       await manager.insert(PaymentDetail, paymentDetailToSave);
 
       // cập nhật các hóa đơn
-      await Promise.all(
-        orderToUpdate.map((order) =>
-          manager.update(ImportOrder, order.id, {
-            payment_status: order.payment_status,
-            amount_paid: order.amount_paid,
-            amount_due: order.amount_due,
-            payment_due_date: order.payment_due_date || null,
-          }),
-        ),
-      );
+      if (type === TypeOrderPayment.IMPORT) {
+        await Promise.all(
+          orderToUpdate.map((order) =>
+            manager.update(ImportOrder, order.id, {
+              payment_status: order.payment_status,
+              amount_paid: order.amount_paid,
+              amount_due: order.amount_due,
+              payment_due_date: order.payment_due_date || null,
+            }),
+          ),
+        );
+      } else {
+        await Promise.all(
+          orderToUpdate.map((order) =>
+            manager.update(ExportOrder, order.id, {
+              payment_status: order.payment_status,
+              amount_paid: order.amount_paid,
+              amount_due: order.amount_due,
+              payment_due_date: order.payment_due_date || null,
+            }),
+          ),
+        );
+      }
     });
   }
 

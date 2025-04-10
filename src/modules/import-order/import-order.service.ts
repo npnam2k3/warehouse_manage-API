@@ -11,7 +11,6 @@ import { ImportOrderDetail } from './entities/import-order-detail.entity';
 import { Inventory } from '../products/entities/inventory.entity';
 import * as crypto from 'crypto';
 import { ERROR_MESSAGE } from 'src/constants/exception.message';
-import { PaymentStatus } from './enum';
 import { ImportProductDTO } from './dto/product-import.dto';
 import { Supply } from '../supplies/entities/supply.entity';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
@@ -26,15 +25,8 @@ export class ImportOrderService {
     private dataSource: DataSource,
   ) {}
   async create(createImportOrderDto: CreateImportOrderDto) {
-    const {
-      supplierId,
-      amount_due,
-      amount_paid,
-      listProducts,
-      note,
-      payment_due_date,
-      payment_status,
-    } = createImportOrderDto;
+    const { supplierId, listProducts, note, payment_due_date, payment_status } =
+      createImportOrderDto;
     if (listProducts.length === 0)
       throw new BadRequestException(ERROR_MESSAGE.LIST_PRODUCT_EMPTY);
     return await this.dataSource.transaction(async (manager) => {
@@ -61,20 +53,12 @@ export class ImportOrderService {
         import_order_code: this.generateImportOrder(),
         total_amount,
         supplier,
+        payment_status,
+        payment_due_date,
+        amount_due: total_amount,
       });
       if (note) newOrder.note = note;
-      newOrder.payment_status = payment_status;
-      if (payment_status === PaymentStatus.UNPAID) {
-        newOrder.payment_due_date = payment_due_date;
-        newOrder.amount_due = total_amount;
-      } else if (payment_status === PaymentStatus.PARTIALLY_PAID) {
-        newOrder.payment_due_date = payment_due_date;
-        newOrder.amount_paid = amount_paid;
-        newOrder.amount_due = amount_due;
-      } else {
-        newOrder.amount_due = 0;
-        newOrder.amount_paid = total_amount;
-      }
+
       // console.log('new order:: ', newOrder);
       const savedOrder = await manager.save(newOrder);
 
