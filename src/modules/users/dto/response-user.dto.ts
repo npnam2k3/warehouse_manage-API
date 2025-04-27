@@ -17,4 +17,7 @@ export class UserResponseDTO {
   @Expose()
   @Type(() => RoleResponseDTO)
   role: RoleResponseDTO;
+
+  @Expose()
+  isBlock: boolean;
 }

@@ -6,7 +6,7 @@ export const RESPONSE_MESSAGE = {
   LOGOUT: 'Đăng xuất thành công.',
   BLOCK: 'Đã khóa tài khoản thành công.',
   UNBLOCK: 'Đã mở khóa tài khoản thành công.',
-  CHANGE_PASSWORD: 'Đổi mật khẩu thành công.',
+  CHANGE_PASSWORD: 'Đổi mật khẩu thành công, vui lòng đăng nhập lại.',
   SEND_EMAIL: 'Gửi email thành công.',
   PAYMENT: 'Thanh toán thành công',
 };

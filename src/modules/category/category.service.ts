@@ -116,8 +116,8 @@ export class CategoryService {
     if (categoryExists.products.length > 0)
       throw new BadRequestException(
         ERROR_MESSAGE.DELETE_FAILED(
-          ENTITIES_MESSAGE.CATEGORY,
-          ENTITIES_MESSAGE.PRODUCT,
+          `danh mục: ${categoryExists.name}`,
+          ENTITIES_MESSAGE.PRODUCT.toLocaleLowerCase(),
         ),
       );
     await this.categoryRepository.softRemove(categoryExists);

@@ -9,6 +9,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT');
+  const client_url = configService.get('CLIENT_URL');
+  app.enableCors({
+    origin: client_url,
+    credentials: true, // cho phép gửi cookie, header
+    exposedHeaders: ['Content-Disposition'], // Cho phép frontend đọc header khi tải file
+  });
   app.use(cookieParser());
   app.useGlobalPipes(CustomValidationPipe);
   app.useGlobalFilters(new AllExceptionsFilter());

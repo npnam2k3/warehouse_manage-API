@@ -69,5 +69,8 @@ export const ERROR_MESSAGE = {
 
   NOT_FOUND: (entity: string) => `${entity} không được tìm thấy.`,
 
+  CANNOT_DELETE_PRODUCT: (entity: string) =>
+    `Không thể xóa sản phẩm ${entity} vì đang có trong kho`,
+
   ALREADY_EXISTS: (entity: string) => `${entity} đã tồn tại`,
 };

@@ -305,7 +305,7 @@ export class CustomersService {
     if (hasDebt) {
       throw new BadRequestException(
         ERROR_MESSAGE.CANNOT_DELETE_SUPPLIER_CUSTOMER(
-          ENTITIES_MESSAGE.CUSTOMER,
+          `${ENTITIES_MESSAGE.CUSTOMER.toLocaleLowerCase()} ${customerExists.fullname}`,
         ),
       );
     }
