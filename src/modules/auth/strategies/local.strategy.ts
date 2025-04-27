@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { AuthService } from '../auth.service';
@@ -15,7 +20,8 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException(ERROR_MESSAGE.INVALID_CREDENTIALS);
     }
 
-    if (user.isBlock) throw new UnauthorizedException(ERROR_MESSAGE.BLOCKED);
+    if (user.isBlock)
+      throw new HttpException(ERROR_MESSAGE.BLOCKED, HttpStatus.LOCKED);
     return user;
   }
 }

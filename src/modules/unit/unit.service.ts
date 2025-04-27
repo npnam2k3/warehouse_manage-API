@@ -53,7 +53,22 @@ export class UnitService {
   //   return `This action updates a #${id} unit`;
   // }
 
-  // remove(id: number) {
-  //   return `This action removes a #${id} unit`;
-  // }
+  async remove(id: number) {
+    const unitExists = await this.unitRepository.findOne({
+      where: { id },
+      relations: ['products'],
+    });
+    if (!unitExists)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.UNIT),
+      );
+    if (unitExists.products.length > 0)
+      throw new BadRequestException(
+        ERROR_MESSAGE.DELETE_FAILED(
+          `đơn vị tính: ${unitExists.name}`,
+          ENTITIES_MESSAGE.PRODUCT.toLocaleLowerCase(),
+        ),
+      );
+    await this.unitRepository.softRemove(unitExists);
+  }
 }

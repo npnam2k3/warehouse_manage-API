@@ -1,12 +1,15 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param } from '@nestjs/common';
 import { UnitService } from './unit.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
+import { ResponseMessage } from 'src/decorator/response.decorator';
+import { RESPONSE_MESSAGE } from 'src/constants/response.message';
 
 @Controller('unit')
 export class UnitController {
   constructor(private readonly unitService: UnitService) {}
 
   @Post()
+  @ResponseMessage(RESPONSE_MESSAGE.CREATE)
   create(@Body() createUnitDto: CreateUnitDto) {
     return this.unitService.create(createUnitDto);
   }
@@ -26,8 +29,9 @@ export class UnitController {
   //   return this.unitService.update(+id, updateUnitDto);
   // }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.unitService.remove(+id);
-  // }
+  @Delete(':id')
+  @ResponseMessage(RESPONSE_MESSAGE.DELETE)
+  remove(@Param('id') id: string) {
+    return this.unitService.remove(+id);
+  }
 }

@@ -37,7 +37,7 @@ export class AuthService {
   private TIME_EXPIRES_ACCESS_TOKEN: string = '1d';
   private TIME_EXPIRES_REFRESH_TOKEN: string = '7d';
   private MAX_AGE_COOKIE: number = 7 * 24 * 60 * 60 * 1000; // 7 days
-  private PATH: string = '/auth';
+  private PATH: string = '/';
 
   private readonly TOKEN_EXPIRATION_TIME = 60 * 15 * 1000; // 15 minutes
 
@@ -150,7 +150,8 @@ export class AuthService {
   saveRefreshTokenIntoCookie(res: Response, refreshToken: string) {
     res.cookie(ENTITIES_MESSAGE.REFRESH_TOKEN, refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      // secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'strict',
       maxAge: this.MAX_AGE_COOKIE,
       path: this.PATH,

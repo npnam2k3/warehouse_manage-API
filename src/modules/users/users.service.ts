@@ -93,7 +93,7 @@ export class UsersService {
         'user.username',
         'user.fullname',
         'user.createdAt',
-        'user.role',
+        'role.name',
         'user.isBlock',
       ])
       .getMany();
@@ -230,6 +230,7 @@ export class UsersService {
     }
     await this.userRepository.update(id, {
       isBlock: true,
+      refreshToken: null,
     });
   }
   async unblock(id: number) {

@@ -77,7 +77,9 @@ export class ProductsService {
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.unit', 'unit');
+      .leftJoinAndSelect('product.unit', 'unit')
+      .leftJoinAndSelect('product.inventories', 'inventories')
+      .leftJoinAndSelect('inventories.warehouse', 'warehouse');
 
     let haveCondition = false;
     let findByCode = false;
@@ -149,7 +151,14 @@ export class ProductsService {
   async findOne(id: number) {
     const productExists = await this.productRepository.findOne({
       where: { id },
-      relations: ['suppliers'],
+      relations: {
+        suppliers: true,
+        category: true,
+        inventories: {
+          warehouse: true,
+        },
+        unit: true,
+      },
     });
 
     if (!productExists) {
@@ -239,14 +248,35 @@ export class ProductsService {
   }
 
   async remove(id: number) {
+    // 1. Tìm product kèm theo quan hệ với inventories
     const productExists = await this.productRepository.findOne({
       where: { id },
+      relations: ['inventories'],
     });
+
+    // 2. Nếu không tồn tại thì báo lỗi
     if (!productExists)
       throw new NotFoundException(
         ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.PRODUCT),
       );
 
+    // 3. Kiểm tra có inventory nào quantity > 0 không
+    const hasQuantity = productExists.inventories.some(
+      (inv) => inv.quantity > 0,
+    );
+    if (hasQuantity)
+      throw new BadRequestException(
+        ERROR_MESSAGE.CANNOT_DELETE_PRODUCT(
+          productExists.name.toLocaleLowerCase(),
+        ),
+      );
+
+    // 4. Xóa các inventory liên quan (nếu có)
+    if (productExists.inventories.length > 0) {
+      await this.inventoryRepository.remove(productExists.inventories);
+    }
+
+    // 5. Soft delete product
     await this.productRepository.softRemove(productExists);
   }
 

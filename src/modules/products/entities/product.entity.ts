@@ -51,7 +51,7 @@ export class Product {
   })
   sell_price: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
   @Column({ type: 'varchar', nullable: true })

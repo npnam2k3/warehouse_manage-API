@@ -102,10 +102,19 @@ export class WarehouseService {
   async remove(id: number) {
     const warehouseExists = await this.warehouseRepository.findOne({
       where: { id },
+      relations: ['inventories'],
     });
     if (!warehouseExists)
       throw new NotFoundException(
         ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.WAREHOUSE),
+      );
+
+    if (warehouseExists.inventories.length > 0)
+      throw new BadRequestException(
+        ERROR_MESSAGE.DELETE_FAILED(
+          warehouseExists.name,
+          ENTITIES_MESSAGE.PRODUCT.toLocaleLowerCase(),
+        ),
       );
     await this.warehouseRepository.softRemove(warehouseExists);
   }

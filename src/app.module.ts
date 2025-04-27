@@ -42,7 +42,7 @@ import { ExportOrderModule } from './modules/export-order/export-order.module';
           database: dbConfig?.name,
           autoLoadEntities: true,
           synchronize: true,
-          logging: true,
+          // logging: true,
         };
       },
     }),

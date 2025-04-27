@@ -22,7 +22,7 @@ import { Action } from '../auth/enums/action.enum';
 import { PAGINATION } from 'src/constants/pagination';
 
 @Controller('users')
-// @UseGuards(MyJwtGuard, AuthorizationGuard)
+@UseGuards(MyJwtGuard, AuthorizationGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
