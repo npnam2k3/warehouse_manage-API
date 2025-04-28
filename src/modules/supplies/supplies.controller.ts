@@ -62,6 +62,7 @@ export class SuppliesController {
   }
 
   @Delete(':id')
+  @ResponseMessage(RESPONSE_MESSAGE.DELETE)
   remove(@Param('id') id: string) {
     return this.suppliesService.remove(+id);
   }

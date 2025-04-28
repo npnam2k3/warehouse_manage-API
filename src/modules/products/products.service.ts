@@ -280,6 +280,13 @@ export class ProductsService {
     await this.productRepository.softRemove(productExists);
   }
 
+  async getAll() {
+    const products = await this.productRepository.find({
+      select: ['id', 'product_code', 'name'],
+    });
+    return products;
+  }
+
   generateProductCode(): string {
     const prefix = 'SP';
     const timestamp = Date.now().toString(36).slice(-4).toUpperCase(); // Lấy 4 ký tự cuối của timestamp base36

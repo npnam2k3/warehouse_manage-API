@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -53,6 +54,11 @@ export class ProductsController {
       sortBy,
       orderBy,
     });
+  }
+
+  @Get('/getAll')
+  getAll() {
+    return this.productsService.getAll();
   }
 
   @Get(':id')
