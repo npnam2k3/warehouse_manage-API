@@ -9,4 +9,5 @@ export const RESPONSE_MESSAGE = {
   CHANGE_PASSWORD: 'Đổi mật khẩu thành công, vui lòng đăng nhập lại.',
   SEND_EMAIL: 'Gửi email thành công.',
   PAYMENT: 'Thanh toán thành công',
+  CANCEL_ORDER: 'Hủy hóa đơn thành công',
 };

@@ -16,6 +16,9 @@ import { Supply } from '../supplies/entities/supply.entity';
 import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
 import { Product } from '../products/entities/product.entity';
 import { Warehouse } from '../warehouse/entities/warehouse.entity';
+import { CancelImportOrderDto } from './dto/cancel-import-order.dto';
+import { PaymentDetail } from '../payments/entities/payment-detail.entity';
+import { OrderStatus } from './enum';
 
 @Injectable()
 export class ImportOrderService {
@@ -56,6 +59,7 @@ export class ImportOrderService {
         payment_status,
         payment_due_date,
         amount_due: total_amount,
+        order_status: OrderStatus.PROCESSING,
       });
       if (note) newOrder.note = note;
 
@@ -245,8 +249,65 @@ export class ImportOrderService {
     return importOrderFound;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} importOrder`;
+  async cancel(cancelImportOrderDto: CancelImportOrderDto) {
+    const { import_order_id, cancel_reason } = cancelImportOrderDto;
+    return await this.dataSource.transaction(async (manage) => {
+      const orderExists = await manage.findOne(ImportOrder, {
+        where: { id: import_order_id },
+        relations: {
+          import_order_details: {
+            product: true,
+            warehouse: true,
+          },
+        },
+      });
+
+      if (!orderExists) {
+        throw new NotFoundException(
+          ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.IMPORT_ORDER),
+        );
+      }
+
+      // kiểm tra hóa đơn này đã có lần thanh toán nào hay chưa
+      const hasPayment = await manage.count(PaymentDetail, {
+        where: {
+          import_order: { id: orderExists.id },
+        },
+      });
+      if (hasPayment) {
+        throw new BadRequestException(
+          ERROR_MESSAGE.CANNOT_CANCEL_ORDER(orderExists.import_order_code),
+        );
+      }
+
+      // giảm số lượng trong kho
+      await Promise.all(
+        orderExists.import_order_details.map((detail) => {
+          if (!detail.product?.id || !detail.warehouse?.id)
+            throw new BadRequestException(ERROR_MESSAGE.INVALID_INPUT);
+          return manage
+            .getRepository(Inventory)
+            .createQueryBuilder()
+            .update()
+            .set({ quantity: () => `quantity - :quantity` })
+            .where('warehouseId = :warehouseId', {
+              warehouseId: detail.warehouse?.id,
+            })
+            .andWhere('productId = :productId', {
+              productId: detail.product?.id,
+            })
+            .setParameters({ quantity: detail.quantity })
+            .execute();
+        }),
+      );
+
+      // cập nhật trạng thái hóa đơn và lý do hủy nếu có
+      const reason = cancel_reason ?? null;
+      await manage.update(ImportOrder, orderExists.id, {
+        order_status: OrderStatus.CANCELED,
+        cancel_reason: reason,
+      });
+    });
   }
 
   generateImportOrder(): string {
