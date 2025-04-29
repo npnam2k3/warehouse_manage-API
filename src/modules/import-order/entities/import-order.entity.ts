@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { PaymentStatus } from '../enum';
+import { OrderStatus, PaymentStatus } from '../enum';
 import { Supply } from 'src/modules/supplies/entities/supply.entity';
 import { ImportOrderDetail } from './import-order-detail.entity';
 import { PaymentDetail } from 'src/modules/payments/entities/payment-detail.entity';
@@ -65,6 +65,12 @@ export class ImportOrder {
 
   @Column({ type: 'varchar', nullable: true })
   note: string | null;
+
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PROCESSING })
+  order_status: OrderStatus;
+
+  @Column({ type: 'text' })
+  cancel_reason: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -13,6 +13,7 @@ import { CreateImportOrderDto } from './dto/create-import-order.dto';
 import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
 import { PAGINATION } from 'src/constants/pagination';
+import { CancelImportOrderDto } from './dto/cancel-import-order.dto';
 
 @Controller('import-order')
 export class ImportOrderController {
@@ -62,8 +63,9 @@ export class ImportOrderController {
   //   return this.importOrderService.update(+id, updateImportOrderDto);
   // }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.importOrderService.remove(+id);
-  // }
+  @Post('/cancel-import-order')
+  @ResponseMessage(RESPONSE_MESSAGE.CANCEL_ORDER)
+  cancel(@Body() cancelImportOrderDto: CancelImportOrderDto) {
+    return this.importOrderService.cancel(cancelImportOrderDto);
+  }
 }

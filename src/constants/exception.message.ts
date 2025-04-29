@@ -54,6 +54,9 @@ export const ERROR_MESSAGE = {
 
   SOMETHING_WRONG: 'Đã có lỗi gì đó xảy ra, vui lòng thử lại sau.',
 
+  CANNOT_CANCEL_ORDER: (entity: string) =>
+    `Không thể hủy hóa đơn có mã: ${entity} vì đã có thanh toán trước đó`,
+
   INVALID_QUANTITY: (
     productName: string,
     quantityInStock: number,
