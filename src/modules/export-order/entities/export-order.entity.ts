@@ -1,5 +1,5 @@
 import { Customer } from 'src/modules/customers/entities/customer.entity';
-import { PaymentStatus } from 'src/modules/import-order/enum';
+import { OrderStatus, PaymentStatus } from 'src/modules/import-order/enum';
 import {
   Column,
   CreateDateColumn,
@@ -65,6 +65,12 @@ export class ExportOrder {
 
   @Column({ type: 'varchar', nullable: true })
   note: string | null;
+
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PROCESSING })
+  order_status: OrderStatus;
+
+  @Column({ type: 'text' })
+  cancel_reason: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

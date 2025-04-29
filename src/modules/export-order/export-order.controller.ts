@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ExportOrderService } from './export-order.service';
 import { CreateExportOrderDto } from './dto/create-export-order.dto';
@@ -14,6 +15,7 @@ import { UpdateExportOrderDto } from './dto/update-export-order.dto';
 import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
 import { PAGINATION } from 'src/constants/pagination';
+import { CancelExportOrderDto } from './dto/cancel-export-order.dto';
 
 @Controller('export-order')
 export class ExportOrderController {
@@ -31,7 +33,8 @@ export class ExportOrderController {
     @Query('page') page: number,
     @Query('limit') limit: number,
     @Query('search') search?: string,
-    @Query('status') status?: string,
+    @Query('payment_status') payment_status?: string,
+    @Query('order_status') order_status?: string,
     @Query('sortBy') sortBy: string = 'total_amount',
     @Query('orderBy') orderBy: 'ASC' | 'DESC' = 'DESC',
   ) {
@@ -41,7 +44,8 @@ export class ExportOrderController {
       pageNum,
       limitNum,
       search,
-      status,
+      payment_status,
+      order_status,
       sortBy,
       orderBy,
     });
@@ -61,8 +65,15 @@ export class ExportOrderController {
     return this.exportOrderService.update(+id, updateExportOrderDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.exportOrderService.remove(+id);
+  @Post('/cancel-export-order')
+  @ResponseMessage(RESPONSE_MESSAGE.CANCEL_ORDER)
+  cancel(@Body() cancelExportOrderDto: CancelExportOrderDto) {
+    return this.exportOrderService.cancel(cancelExportOrderDto);
+  }
+
+  @Put('/confirm-export-order/:id')
+  @ResponseMessage(RESPONSE_MESSAGE.CONFIRM_ORDER)
+  confirm(@Param('id') id: string) {
+    return this.exportOrderService.confirm(+id);
   }
 }
