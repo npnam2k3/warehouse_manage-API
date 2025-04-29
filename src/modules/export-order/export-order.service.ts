@@ -17,6 +17,9 @@ import { Warehouse } from '../warehouse/entities/warehouse.entity';
 import { Inventory } from '../products/entities/inventory.entity';
 import { ExportOrderDetail } from './entities/export-order-detail.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CancelExportOrderDto } from './dto/cancel-export-order.dto';
+import { PaymentDetail } from '../payments/entities/payment-detail.entity';
+import { OrderStatus } from '../import-order/enum';
 
 @Injectable()
 export class ExportOrderService {
@@ -147,7 +150,15 @@ export class ExportOrderService {
     });
   }
 
-  async findAll({ pageNum, limitNum, search, status, sortBy, orderBy }) {
+  async findAll({
+    pageNum,
+    limitNum,
+    search,
+    payment_status,
+    order_status,
+    sortBy,
+    orderBy,
+  }) {
     const queryBuilder = this.exportOrderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.customer', 'customer');
@@ -167,11 +178,28 @@ export class ExportOrderService {
       hasCondition = true;
     }
 
-    if (status && !findByCode) {
+    if (payment_status && !findByCode) {
       if (hasCondition) {
-        queryBuilder.andWhere('order.payment_status = :status', { status });
+        queryBuilder.andWhere('order.payment_status = :payment_status', {
+          payment_status,
+        });
       } else {
-        queryBuilder.where('order.payment_status = :status', { status });
+        queryBuilder.where('order.payment_status = :payment_status', {
+          payment_status,
+        });
+      }
+      hasCondition = true;
+    }
+
+    if (order_status && !findByCode) {
+      if (hasCondition) {
+        queryBuilder.andWhere('order.order_status = :order_status', {
+          order_status,
+        });
+      } else {
+        queryBuilder.where('order.order_status = :order_status', {
+          order_status,
+        });
       }
     }
 
@@ -202,7 +230,8 @@ export class ExportOrderService {
         pageNum,
         limitNum,
         search,
-        status,
+        payment_status,
+        order_status,
         sortBy,
         orderBy,
       },
@@ -235,8 +264,80 @@ export class ExportOrderService {
     return `This action updates a #${id} exportOrder`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} exportOrder`;
+  async cancel(cancelExportOrderDto: CancelExportOrderDto) {
+    const { export_order_id, cancel_reason } = cancelExportOrderDto;
+    return await this.dataSource.transaction(async (manage) => {
+      const orderExists = await manage.findOne(ExportOrder, {
+        where: { id: export_order_id },
+        relations: {
+          export_order_details: {
+            product: true,
+            warehouse: true,
+          },
+        },
+      });
+
+      if (!orderExists) {
+        throw new NotFoundException(
+          ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.EXPORT_ORDER),
+        );
+      }
+
+      // kiểm tra hóa đơn này đã có lần thanh toán nào hay chưa
+      const hasPayment = await manage.count(PaymentDetail, {
+        where: {
+          export_order: { id: orderExists.id },
+        },
+      });
+      if (hasPayment) {
+        throw new BadRequestException(
+          ERROR_MESSAGE.CANNOT_CANCEL_ORDER(orderExists.export_order_code),
+        );
+      }
+
+      // tăng số lượng trong kho
+      await Promise.all(
+        orderExists.export_order_details.map((detail) => {
+          if (!detail.product?.id || !detail.warehouse?.id)
+            throw new BadRequestException(ERROR_MESSAGE.INVALID_INPUT);
+          return manage
+            .getRepository(Inventory)
+            .createQueryBuilder()
+            .update()
+            .set({ quantity: () => `quantity + :quantity` })
+            .where('warehouseId = :warehouseId', {
+              warehouseId: detail.warehouse?.id,
+            })
+            .andWhere('productId = :productId', {
+              productId: detail.product?.id,
+            })
+            .setParameters({ quantity: detail.quantity })
+            .execute();
+        }),
+      );
+
+      // cập nhật trạng thái hóa đơn và lý do hủy nếu có
+      const reason = cancel_reason ?? null;
+      await manage.update(ExportOrder, orderExists.id, {
+        order_status: OrderStatus.CANCELED,
+        cancel_reason: reason,
+      });
+    });
+  }
+
+  async confirm(id: number) {
+    const orderExists = await this.exportOrderRepository.count({
+      where: { id },
+    });
+
+    if (orderExists <= 0)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.EXPORT_ORDER),
+      );
+
+    await this.exportOrderRepository.update(id, {
+      order_status: OrderStatus.COMPLETED,
+    });
   }
 
   calcTotalAmount(listProducts: ExportProductDTO[]) {

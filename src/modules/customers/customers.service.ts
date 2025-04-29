@@ -14,7 +14,7 @@ import { ENTITIES_MESSAGE } from 'src/constants/entity.message';
 import { getInfoObject } from 'src/utils/compareObject';
 import { isEmpty, isEqual, omitBy } from 'lodash';
 import { ExportOrder } from '../export-order/entities/export-order.entity';
-import { PaymentStatus } from '../import-order/enum';
+import { OrderStatus, PaymentStatus } from '../import-order/enum';
 import { IsDebt } from '../supplies/enum';
 
 @Injectable()
@@ -112,8 +112,9 @@ export class CustomersService {
     const customersWithDebt = customers.map((customer) => {
       const hasDebt = customer.exportOrders?.some(
         (order) =>
-          order.payment_status === PaymentStatus.UNPAID ||
-          order.payment_status === PaymentStatus.PARTIALLY_PAID,
+          order.order_status === OrderStatus.COMPLETED &&
+          (order.payment_status === PaymentStatus.UNPAID ||
+            order.payment_status === PaymentStatus.PARTIALLY_PAID),
       );
       return {
         ...customer,
@@ -176,6 +177,7 @@ export class CustomersService {
           amount_paid: order.amount_paid,
           amount_due: order.amount_due,
           note: order.note,
+          order_status: order.order_status,
           createdAt: order.createdAt,
           list_product_in_order:
             order.export_order_details.length > 0
@@ -317,8 +319,9 @@ export class CustomersService {
     if (list_orders.length === 0) return 0;
     for (const order of list_orders) {
       if (
-        order.payment_status === PaymentStatus.PARTIALLY_PAID ||
-        order.payment_status === PaymentStatus.UNPAID
+        order.order_status === OrderStatus.COMPLETED &&
+        (order.payment_status === PaymentStatus.PARTIALLY_PAID ||
+          order.payment_status === PaymentStatus.UNPAID)
       ) {
         total_debt += order.amount_due;
       }

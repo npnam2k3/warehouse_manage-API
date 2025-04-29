@@ -17,7 +17,7 @@ import { SupplierProductDto } from './dto/create-supplier-product.dto';
 import { Product } from '../products/entities/product.entity';
 import { DeleteProductSupplierDto } from './dto/delete-supplier-product.dto';
 import { ImportOrder } from '../import-order/entities/import-order.entity';
-import { PaymentStatus } from '../import-order/enum';
+import { OrderStatus, PaymentStatus } from '../import-order/enum';
 import { IsDebt } from './enum';
 
 @Injectable()
@@ -117,8 +117,9 @@ export class SuppliesService {
     const suppliersWithDebt = suppliers.map((supplier) => {
       const hasDebt = supplier.importOrders?.some(
         (order) =>
-          order.payment_status === PaymentStatus.UNPAID ||
-          order.payment_status === PaymentStatus.PARTIALLY_PAID,
+          order.order_status === OrderStatus.COMPLETED &&
+          (order.payment_status === PaymentStatus.PARTIALLY_PAID ||
+            order.payment_status === PaymentStatus.UNPAID),
       );
       return {
         ...supplier,
@@ -180,6 +181,7 @@ export class SuppliesService {
           payment_due_date: order.payment_due_date,
           amount_paid: order.amount_paid,
           amount_due: order.amount_due,
+          order_status: order.order_status,
           note: order.note,
           createdAt: order.createdAt,
           list_product_in_order:
@@ -375,8 +377,9 @@ export class SuppliesService {
     if (list_orders.length === 0) return 0;
     for (const order of list_orders) {
       if (
-        order.payment_status === PaymentStatus.PARTIALLY_PAID ||
-        order.payment_status === PaymentStatus.UNPAID
+        order.order_status === OrderStatus.COMPLETED &&
+        (order.payment_status === PaymentStatus.PARTIALLY_PAID ||
+          order.payment_status === PaymentStatus.UNPAID)
       ) {
         total_debt += order.amount_due;
       }

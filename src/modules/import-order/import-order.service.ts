@@ -168,7 +168,15 @@ export class ImportOrderService {
     });
   }
 
-  async findAll({ pageNum, limitNum, search, status, sortBy, orderBy }) {
+  async findAll({
+    pageNum,
+    limitNum,
+    search,
+    payment_status,
+    order_status,
+    sortBy,
+    orderBy,
+  }) {
     const queryBuilder = this.importOrderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.supplier', 'supplier');
@@ -188,11 +196,28 @@ export class ImportOrderService {
       hasCondition = true;
     }
 
-    if (status && !findByCode) {
+    if (payment_status && !findByCode) {
       if (hasCondition) {
-        queryBuilder.andWhere('order.payment_status = :status', { status });
+        queryBuilder.andWhere('order.payment_status = :payment_status', {
+          payment_status,
+        });
       } else {
-        queryBuilder.where('order.payment_status = :status', { status });
+        queryBuilder.where('order.payment_status = :payment_status', {
+          payment_status,
+        });
+      }
+      hasCondition = true;
+    }
+
+    if (order_status && !findByCode) {
+      if (hasCondition) {
+        queryBuilder.andWhere('order.order_status = :order_status', {
+          order_status,
+        });
+      } else {
+        queryBuilder.where('order.order_status = :order_status', {
+          order_status,
+        });
       }
     }
 
@@ -223,7 +248,8 @@ export class ImportOrderService {
         pageNum,
         limitNum,
         search,
-        status,
+        payment_status,
+        order_status,
         sortBy,
         orderBy,
       },
@@ -307,6 +333,21 @@ export class ImportOrderService {
         order_status: OrderStatus.CANCELED,
         cancel_reason: reason,
       });
+    });
+  }
+
+  async confirm(id: number) {
+    const orderExists = await this.importOrderRepository.count({
+      where: { id },
+    });
+
+    if (orderExists <= 0)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.IMPORT_ORDER),
+      );
+
+    await this.importOrderRepository.update(id, {
+      order_status: OrderStatus.COMPLETED,
     });
   }
 

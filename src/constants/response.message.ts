@@ -10,4 +10,5 @@ export const RESPONSE_MESSAGE = {
   SEND_EMAIL: 'Gửi email thành công.',
   PAYMENT: 'Thanh toán thành công',
   CANCEL_ORDER: 'Hủy hóa đơn thành công',
+  CONFIRM_ORDER: 'Xác nhận hóa đơn thành công',
 };

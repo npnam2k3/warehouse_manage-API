@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ImportOrderService } from './import-order.service';
 import { CreateImportOrderDto } from './dto/create-import-order.dto';
@@ -31,7 +32,8 @@ export class ImportOrderController {
     @Query('page') page: number,
     @Query('limit') limit: number,
     @Query('search') search?: string,
-    @Query('status') status?: string,
+    @Query('payment_status') payment_status?: string,
+    @Query('order_status') order_status?: string,
     @Query('sortBy') sortBy: string = 'total_amount',
     @Query('orderBy') orderBy: 'ASC' | 'DESC' = 'DESC',
   ) {
@@ -41,7 +43,8 @@ export class ImportOrderController {
       pageNum,
       limitNum,
       search,
-      status,
+      payment_status,
+      order_status,
       sortBy,
       orderBy,
     });
@@ -67,5 +70,11 @@ export class ImportOrderController {
   @ResponseMessage(RESPONSE_MESSAGE.CANCEL_ORDER)
   cancel(@Body() cancelImportOrderDto: CancelImportOrderDto) {
     return this.importOrderService.cancel(cancelImportOrderDto);
+  }
+
+  @Put('/confirm-import-order/:id')
+  @ResponseMessage(RESPONSE_MESSAGE.CONFIRM_ORDER)
+  confirm(@Param('id') id: string) {
+    return this.importOrderService.confirm(+id);
   }
 }
