@@ -48,6 +48,17 @@ export class SuppliesController {
       orderBy,
     });
   }
+  @Get('/getAll')
+  @ResponseMessage(RESPONSE_MESSAGE.GET)
+  getAllSuppliersNoPagination() {
+    return this.suppliesService.getAllSuppliersNoPagination();
+  }
+
+  @Get('/get-products-of-supplier/:id')
+  @ResponseMessage(RESPONSE_MESSAGE.GET)
+  getProductsOfSupplier(@Param('id') id: string) {
+    return this.suppliesService.getProductsOfSupplier(+id);
+  }
 
   @Get(':id')
   @ResponseMessage(RESPONSE_MESSAGE.GET)
