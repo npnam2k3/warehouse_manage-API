@@ -372,6 +372,24 @@ export class SuppliesService {
     await this.supplierRepository.save(supplier);
   }
 
+  async getAllSuppliersNoPagination() {
+    return await this.supplierRepository.find();
+  }
+
+  async getProductsOfSupplier(id: number) {
+    const supplierExists = await this.supplierRepository.findOne({
+      where: { id },
+      relations: {
+        products: true,
+      },
+    });
+    if (!supplierExists)
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.SUPPLIER),
+      );
+    return supplierExists.products;
+  }
+
   calcTotalDebtOfSupplier(list_orders: ImportOrder[]): number {
     let total_debt = 0;
     if (list_orders.length === 0) return 0;

@@ -60,6 +60,7 @@ export class ImportOrderService {
         payment_due_date,
         amount_due: total_amount,
         order_status: OrderStatus.PROCESSING,
+        cancel_reason: null,
       });
       if (note) newOrder.note = note;
 
