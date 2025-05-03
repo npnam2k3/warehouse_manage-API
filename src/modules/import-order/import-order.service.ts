@@ -266,6 +266,7 @@ export class ImportOrderService {
         'import_order_details.product',
         'paymentDetails',
         'paymentDetails.payment',
+        'paymentDetails.payment.user',
       ],
     });
     if (!importOrderFound)
@@ -273,7 +274,25 @@ export class ImportOrderService {
         ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.IMPORT_ORDER),
       );
 
-    return importOrderFound;
+    const { paymentDetails } = importOrderFound;
+    const formatData = paymentDetails.map((p) => {
+      const { payment } = p;
+      const paymentFormatted = {
+        id: payment.id,
+        total_amount: payment.total_amount,
+        payment_date: payment.payment_date,
+        payment_method: payment.payment_method,
+        createAt: payment.createdAt,
+        user: {
+          id: payment.user?.id,
+          fullname: payment.user?.fullname,
+          username: payment.user?.username,
+        },
+      };
+      return { ...p, payment: paymentFormatted };
+    });
+
+    return { ...importOrderFound, paymentDetails: formatData };
   }
 
   async cancel(cancelImportOrderDto: CancelImportOrderDto) {

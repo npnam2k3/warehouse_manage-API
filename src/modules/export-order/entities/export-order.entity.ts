@@ -69,7 +69,7 @@ export class ExportOrder {
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PROCESSING })
   order_status: OrderStatus;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   cancel_reason: string | null;
 
   @CreateDateColumn()

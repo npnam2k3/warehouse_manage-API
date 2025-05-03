@@ -47,6 +47,12 @@ export class CustomersController {
     });
   }
 
+  @Get('/getAll')
+  @ResponseMessage(RESPONSE_MESSAGE.GET)
+  getAllCustomersNoPagination() {
+    return this.customersService.getAllCustomersNoPagination();
+  }
+
   @Get(':id')
   @ResponseMessage(RESPONSE_MESSAGE.GET)
   findOne(@Param('id') id: string) {

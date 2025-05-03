@@ -314,6 +314,10 @@ export class CustomersService {
     await this.customerRepository.softRemove(customerExists);
   }
 
+  async getAllCustomersNoPagination() {
+    return await this.customerRepository.find();
+  }
+
   calcTotalDebtOfCustomer(list_orders: ExportOrder[]): number {
     let total_debt = 0;
     if (list_orders.length === 0) return 0;

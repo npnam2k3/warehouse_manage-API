@@ -287,6 +287,17 @@ export class ProductsService {
     return products;
   }
 
+  async getAllProductsHaveQuantityInWarehouse() {
+    const products = await this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.inventories', 'inventory')
+      .leftJoinAndSelect('inventory.warehouse', 'warehouse')
+      .where('warehouse.id IS NOT NULL')
+      .getMany();
+
+    return products;
+  }
+
   generateProductCode(): string {
     const prefix = 'SP';
     const timestamp = Date.now().toString(36).slice(-4).toUpperCase(); // Lấy 4 ký tự cuối của timestamp base36

@@ -245,11 +245,15 @@ export class ExportOrderService {
       where: { id },
       relations: {
         export_order_details: {
-          product: true,
+          product: {
+            unit: true,
+          },
         },
         customer: true,
         paymentDetails: {
-          payment: true,
+          payment: {
+            user: true,
+          },
         },
       },
     });
@@ -258,8 +262,25 @@ export class ExportOrderService {
         ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.EXPORT_ORDER),
       );
     }
+    const { paymentDetails } = exportOrderFound;
+    const formatData = paymentDetails.map((p) => {
+      const { payment } = p;
+      const paymentFormatted = {
+        id: payment.id,
+        total_amount: payment.total_amount,
+        payment_date: payment.payment_date,
+        payment_method: payment.payment_method,
+        createAt: payment.createdAt,
+        user: {
+          id: payment.user?.id,
+          fullname: payment.user?.fullname,
+          username: payment.user?.username,
+        },
+      };
+      return { ...p, payment: paymentFormatted };
+    });
 
-    return exportOrderFound;
+    return { ...exportOrderFound, paymentDetails: formatData };
   }
 
   update(id: number, updateExportOrderDto: UpdateExportOrderDto) {

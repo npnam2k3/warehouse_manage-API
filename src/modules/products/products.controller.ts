@@ -60,6 +60,10 @@ export class ProductsController {
   getAll() {
     return this.productsService.getAll();
   }
+  @Get('/getAllProductsHaveQuantityInWarehouse')
+  getAllProductsHaveQuantityInWarehouse() {
+    return this.productsService.getAllProductsHaveQuantityInWarehouse();
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
