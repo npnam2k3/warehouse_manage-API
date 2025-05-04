@@ -54,6 +54,12 @@ export class SuppliesController {
     return this.suppliesService.getAllSuppliersNoPagination();
   }
 
+  @Get('/getSuppliersHaveDebt')
+  @ResponseMessage(RESPONSE_MESSAGE.GET)
+  getSuppliersHaveDebt(@Query('search') search?: string) {
+    return this.suppliesService.getSuppliersHaveDebt({ search });
+  }
+
   @Get('/get-products-of-supplier/:id')
   @ResponseMessage(RESPONSE_MESSAGE.GET)
   getProductsOfSupplier(@Param('id') id: string) {

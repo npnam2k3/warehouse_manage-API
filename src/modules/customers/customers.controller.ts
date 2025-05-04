@@ -53,6 +53,12 @@ export class CustomersController {
     return this.customersService.getAllCustomersNoPagination();
   }
 
+  @Get('/getCustomersHaveDebt')
+  @ResponseMessage(RESPONSE_MESSAGE.GET)
+  getCustomersHaveDebt(@Query('search') search?: string) {
+    return this.customersService.getCustomersHaveDebt({ search });
+  }
+
   @Get(':id')
   @ResponseMessage(RESPONSE_MESSAGE.GET)
   findOne(@Param('id') id: string) {

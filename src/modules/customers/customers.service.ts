@@ -318,6 +318,42 @@ export class CustomersService {
     return await this.customerRepository.find();
   }
 
+  async getCustomersHaveDebt({ search }) {
+    const queryBuilder = this.customerRepository
+      .createQueryBuilder('customer')
+      .leftJoinAndSelect('customer.exportOrders', 'exportOrders')
+      .leftJoinAndSelect(
+        'exportOrders.export_order_details',
+        'export_order_details',
+      )
+      .leftJoinAndSelect('export_order_details.product', 'product')
+      .leftJoinAndSelect('export_order_details.warehouse', 'warehouse')
+      .where('exportOrders.order_status = :order_status', {
+        order_status: OrderStatus.COMPLETED,
+      })
+      .andWhere('exportOrders.payment_status IN (:...paymentStatuses)', {
+        paymentStatuses: [PaymentStatus.PARTIALLY_PAID, PaymentStatus.UNPAID],
+      });
+
+    if (search) {
+      queryBuilder.andWhere('customer.fullname LIKE :name', {
+        name: `%${search}%`,
+      });
+    }
+
+    const customers = await queryBuilder.getMany();
+
+    const formattedCustomers = customers.map((cus) => {
+      let totalDebt = this.calcTotalDebtOfCustomer(cus.exportOrders);
+      if (totalDebt > 0)
+        return {
+          ...cus,
+          totalDebt,
+        };
+    });
+    return formattedCustomers;
+  }
+
   calcTotalDebtOfCustomer(list_orders: ExportOrder[]): number {
     let total_debt = 0;
     if (list_orders.length === 0) return 0;

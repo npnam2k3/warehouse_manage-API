@@ -390,6 +390,42 @@ export class SuppliesService {
     return supplierExists.products;
   }
 
+  async getSuppliersHaveDebt({ search }) {
+    const queryBuilder = this.supplierRepository
+      .createQueryBuilder('supplier')
+      .leftJoinAndSelect('supplier.importOrders', 'importOrders')
+      .leftJoinAndSelect(
+        'importOrders.import_order_details',
+        'import_order_details',
+      )
+      .leftJoinAndSelect('import_order_details.product', 'product')
+      .leftJoinAndSelect('import_order_details.warehouse', 'warehouse')
+      .where('importOrders.order_status = :order_status', {
+        order_status: OrderStatus.COMPLETED,
+      })
+      .andWhere('importOrders.payment_status IN (:...paymentStatuses)', {
+        paymentStatuses: [PaymentStatus.PARTIALLY_PAID, PaymentStatus.UNPAID],
+      });
+
+    if (search) {
+      queryBuilder.andWhere('supplier.name_company LIKE :name', {
+        name: `%${search}%`,
+      });
+    }
+
+    const suppliers = await queryBuilder.getMany();
+
+    const formattedSuppliers = suppliers.map((sup) => {
+      let totalDebt = this.calcTotalDebtOfSupplier(sup.importOrders);
+      if (totalDebt > 0)
+        return {
+          ...sup,
+          totalDebt,
+        };
+    });
+    return formattedSuppliers;
+  }
+
   calcTotalDebtOfSupplier(list_orders: ImportOrder[]): number {
     let total_debt = 0;
     if (list_orders.length === 0) return 0;
