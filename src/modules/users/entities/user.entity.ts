@@ -1,3 +1,4 @@
+import { InventoryAdjustment } from 'src/modules/inventory-adjustment/entities/inventory-adjustment.entity';
 import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Role } from 'src/modules/roles/entities/role.entity';
 import {
@@ -54,4 +55,10 @@ export class User {
 
   @OneToMany(() => Payment, (payment) => payment.user)
   payments: Payment[];
+
+  @OneToMany(
+    () => InventoryAdjustment,
+    (inventoryAdjustment) => inventoryAdjustment.user,
+  )
+  inventory_adjustments: InventoryAdjustment[];
 }

@@ -6,9 +6,13 @@ import { User } from './entities/user.entity';
 import { Role } from '../roles/entities/role.entity';
 import { RolesModule } from '../roles/roles.module';
 import { Payment } from '../payments/entities/payment.entity';
+import { InventoryAdjustment } from '../inventory-adjustment/entities/inventory-adjustment.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Role, Payment]), RolesModule],
+  imports: [
+    TypeOrmModule.forFeature([User, Role, Payment, InventoryAdjustment]),
+    RolesModule,
+  ],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],

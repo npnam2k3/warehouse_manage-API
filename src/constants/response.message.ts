@@ -11,4 +11,5 @@ export const RESPONSE_MESSAGE = {
   PAYMENT: 'Thanh toán thành công',
   CANCEL_ORDER: 'Hủy hóa đơn thành công',
   CONFIRM_ORDER: 'Xác nhận hóa đơn thành công',
+  CHANGE_INVENTORY: 'Điều chỉnh thành công',
 };

@@ -1,3 +1,4 @@
+import { InventoryAdjustment } from 'src/modules/inventory-adjustment/entities/inventory-adjustment.entity';
 import { Inventory } from 'src/modules/products/entities/inventory.entity';
 import {
   Column,
@@ -31,4 +32,10 @@ export class Warehouse {
 
   @OneToMany(() => Inventory, (inventory) => inventory.warehouse)
   inventories: Inventory[];
+
+  @OneToMany(
+    () => InventoryAdjustment,
+    (inventoryAdjustment) => inventoryAdjustment.warehouse,
+  )
+  inventory_adjustments: InventoryAdjustment[];
 }
