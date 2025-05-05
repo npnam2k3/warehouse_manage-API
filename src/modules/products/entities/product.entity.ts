@@ -15,6 +15,7 @@ import { Inventory } from './inventory.entity';
 import { Supply } from 'src/modules/supplies/entities/supply.entity';
 import { ImportOrderDetail } from 'src/modules/import-order/entities/import-order-detail.entity';
 import { ExportOrderDetail } from 'src/modules/export-order/entities/export-order-detail.entity';
+import { InventoryAdjustment } from 'src/modules/inventory-adjustment/entities/inventory-adjustment.entity';
 
 @Entity()
 export class Product {
@@ -89,4 +90,10 @@ export class Product {
     (exportOrderDetail) => exportOrderDetail.product,
   )
   export_order_details: ExportOrderDetail[];
+
+  @OneToMany(
+    () => InventoryAdjustment,
+    (inventoryAdjustment) => inventoryAdjustment.product,
+  )
+  inventory_adjustments: InventoryAdjustment[];
 }
