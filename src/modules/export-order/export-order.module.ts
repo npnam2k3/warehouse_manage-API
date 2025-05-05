@@ -20,5 +20,6 @@ import { PaymentDetail } from '../payments/entities/payment-detail.entity';
   ],
   controllers: [ExportOrderController],
   providers: [ExportOrderService],
+  exports: [TypeOrmModule],
 })
 export class ExportOrderModule {}
