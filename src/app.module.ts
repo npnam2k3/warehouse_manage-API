@@ -21,6 +21,7 @@ import { SuppliesModule } from './modules/supplies/supplies.module';
 import { ImportOrderModule } from './modules/import-order/import-order.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ExportOrderModule } from './modules/export-order/export-order.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { ExportOrderModule } from './modules/export-order/export-order.module';
     ImportOrderModule,
     PaymentsModule,
     ExportOrderModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

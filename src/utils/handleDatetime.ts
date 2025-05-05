@@ -14,3 +14,11 @@ export function isDateValidString(dateStr: string): boolean {
 
   return inputDate > today;
 }
+
+// lấy ngày thứ N trước ngày hiện tại
+export function getDateNDaysAgo(days: number, currentDate: string): string {
+  return moment(currentDate)
+    .subtract(days, 'days')
+    .startOf('day')
+    .format('YYYY-MM-DD');
+}
