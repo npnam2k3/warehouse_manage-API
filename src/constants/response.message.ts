@@ -1,0 +1,15 @@
+export const RESPONSE_MESSAGE = {
+  CREATE: 'Tạo mới thành công.',
+  UPDATE: 'Cập nhật thành công.',
+  GET: 'Lấy thành công.',
+  DELETE: 'Xóa thành công.',
+  LOGOUT: 'Đăng xuất thành công.',
+  BLOCK: 'Đã khóa tài khoản thành công.',
+  UNBLOCK: 'Đã mở khóa tài khoản thành công.',
+  CHANGE_PASSWORD: 'Đổi mật khẩu thành công, vui lòng đăng nhập lại.',
+  SEND_EMAIL: 'Gửi email thành công.',
+  PAYMENT: 'Thanh toán thành công',
+  CANCEL_ORDER: 'Hủy hóa đơn thành công',
+  CONFIRM_ORDER: 'Xác nhận hóa đơn thành công',
+  CHANGE_INVENTORY: 'Điều chỉnh thành công',
+};

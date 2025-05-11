@@ -9,5 +9,16 @@ export default () => ({
     type: process.env.DATABASE_TYPE || 'mysql',
     name: process.env.DATABASE_NAME,
   },
-  jwt_secret: process.env.JWT_KEY,
+  jwt_access_token_secret: process.env.JWT_ACCESS_TOKEN_KEY,
+  jwt_refresh_token_secret: process.env.JWT_REFRESH_TOKEN_KEY,
+
+  mail_host: process.env.MAIL_HOST,
+  mail_name: process.env.EMAIL_NAME,
+  mail_pass: process.env.EMAIL_APP_PASSWORD,
+  mail_from: process.env.MAIL_FROM,
+  client_url: process.env.CLIENT_URL,
+
+  cloudinary_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET,
 });

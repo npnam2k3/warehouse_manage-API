@@ -10,6 +10,20 @@ import { ResponseInterceptor } from './interceptor/response.interceptor';
 import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { MailModule } from './mail/mail.module';
+import { CategoryModule } from './modules/category/category.module';
+import { WarehouseModule } from './modules/warehouse/warehouse.module';
+import { CustomersModule } from './modules/customers/customers.module';
+import { ProductsModule } from './modules/products/products.module';
+import { UnitModule } from './modules/unit/unit.module';
+import { SuppliesModule } from './modules/supplies/supplies.module';
+import { ImportOrderModule } from './modules/import-order/import-order.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { ExportOrderModule } from './modules/export-order/export-order.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { InventoryAdjustmentModule } from './modules/inventory-adjustment/inventory-adjustment.module';
+import { StatisticReportModule } from './modules/statistic-report/statistic-report.module';
 
 @Module({
   imports: [
@@ -31,12 +45,27 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
           database: dbConfig?.name,
           autoLoadEntities: true,
           synchronize: true,
+          // logging: true,
         };
       },
     }),
     UsersModule,
     RolesModule,
     PermissionsModule,
+    AuthModule,
+    MailModule,
+    CategoryModule,
+    WarehouseModule,
+    CustomersModule,
+    ProductsModule,
+    UnitModule,
+    SuppliesModule,
+    ImportOrderModule,
+    PaymentsModule,
+    ExportOrderModule,
+    DashboardModule,
+    InventoryAdjustmentModule,
+    StatisticReportModule,
   ],
   controllers: [AppController],
   providers: [

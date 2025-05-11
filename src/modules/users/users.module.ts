@@ -4,10 +4,17 @@ import { UsersController } from './users.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Role } from '../roles/entities/role.entity';
+import { RolesModule } from '../roles/roles.module';
+import { Payment } from '../payments/entities/payment.entity';
+import { InventoryAdjustment } from '../inventory-adjustment/entities/inventory-adjustment.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Role])],
+  imports: [
+    TypeOrmModule.forFeature([User, Role, Payment, InventoryAdjustment]),
+    RolesModule,
+  ],
   controllers: [UsersController],
   providers: [UsersService],
+  exports: [UsersService],
 })
 export class UsersModule {}
