@@ -8,3 +8,7 @@ export enum OrderStatus {
   COMPLETED = 'COMPLETED',
   CANCELED = 'CANCELED',
 }
+export enum TypeOrder {
+  IMPORT = 'IMPORT',
+  EXPORT = 'EXPORT',
+}

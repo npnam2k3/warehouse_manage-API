@@ -112,7 +112,7 @@ export class DashboardService {
   async getOrdersRecent() {
     const today = normalizeDate(new Date());
     // const today = '2025-04-15';
-    const threeDaysAgo = getDateNDaysAgo(7, today);
+    const threeDaysAgo = getDateNDaysAgo(3, today);
 
     const importOrdersRecent = await this.importOrderRepository
       .createQueryBuilder('importOrder')

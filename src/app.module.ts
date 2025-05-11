@@ -23,6 +23,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { ExportOrderModule } from './modules/export-order/export-order.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { InventoryAdjustmentModule } from './modules/inventory-adjustment/inventory-adjustment.module';
+import { StatisticReportModule } from './modules/statistic-report/statistic-report.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { InventoryAdjustmentModule } from './modules/inventory-adjustment/invent
     ExportOrderModule,
     DashboardModule,
     InventoryAdjustmentModule,
+    StatisticReportModule,
   ],
   controllers: [AppController],
   providers: [
