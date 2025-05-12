@@ -7,6 +7,8 @@ import { ExportOrderDetail } from './entities/export-order-detail.entity';
 import { Customer } from '../customers/entities/customer.entity';
 import { Warehouse } from '../warehouse/entities/warehouse.entity';
 import { PaymentDetail } from '../payments/entities/payment-detail.entity';
+import { UsersModule } from '../users/users.module';
+import { RolesModule } from '../roles/roles.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { PaymentDetail } from '../payments/entities/payment-detail.entity';
       Warehouse,
       PaymentDetail,
     ]),
+    UsersModule,
+    RolesModule,
   ],
   controllers: [ExportOrderController],
   providers: [ExportOrderService],

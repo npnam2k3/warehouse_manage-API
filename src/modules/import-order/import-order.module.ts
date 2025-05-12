@@ -10,6 +10,8 @@ import { ProductsModule } from '../products/products.module';
 import { SuppliesModule } from '../supplies/supplies.module';
 import { WarehouseModule } from '../warehouse/warehouse.module';
 import { PaymentDetail } from '../payments/entities/payment-detail.entity';
+import { UsersModule } from '../users/users.module';
+import { RolesModule } from '../roles/roles.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { PaymentDetail } from '../payments/entities/payment-detail.entity';
     ProductsModule,
     SuppliesModule,
     WarehouseModule,
+    UsersModule,
+    RolesModule,
   ],
   controllers: [ImportOrderController],
   providers: [ImportOrderService],
