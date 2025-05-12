@@ -15,13 +15,21 @@ import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { MyJwtGuard } from '../auth/guard/jwt-auth.guard';
 import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
+import { AuthorizationGuard } from '../auth/guard/authorization.guard';
+import { Permissions } from 'src/decorator/permissions.decorator';
+import { Subject } from '../auth/enums/subject.enum';
+import { Action } from '../auth/enums/action.enum';
 
 @Controller('payments')
-@UseGuards(MyJwtGuard)
+@UseGuards(MyJwtGuard, AuthorizationGuard)
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post()
+  @Permissions({
+    subject: Subject.payment,
+    actions: [Action.create],
+  })
   @ResponseMessage(RESPONSE_MESSAGE.PAYMENT)
   create(@Body() createPaymentDto: CreatePaymentDto, @Request() req) {
     const idUserLogin = req.user?.userId;

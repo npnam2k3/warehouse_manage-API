@@ -13,6 +13,8 @@ import { Supply } from '../supplies/entities/supply.entity';
 import { ImportOrderDetail } from '../import-order/entities/import-order-detail.entity';
 import { ExportOrderDetail } from '../export-order/entities/export-order-detail.entity';
 import { InventoryAdjustment } from '../inventory-adjustment/entities/inventory-adjustment.entity';
+import { UsersModule } from '../users/users.module';
+import { RolesModule } from '../roles/roles.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { InventoryAdjustment } from '../inventory-adjustment/entities/inventory-
     CloudinaryModule,
     CategoryModule,
     UnitModule,
+    UsersModule,
+    RolesModule,
   ],
   controllers: [ProductsController],
   providers: [ProductsService],

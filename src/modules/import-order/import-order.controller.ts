@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { ImportOrderService } from './import-order.service';
 import { CreateImportOrderDto } from './dto/create-import-order.dto';
@@ -15,18 +16,32 @@ import { ResponseMessage } from 'src/decorator/response.decorator';
 import { RESPONSE_MESSAGE } from 'src/constants/response.message';
 import { PAGINATION } from 'src/constants/pagination';
 import { CancelImportOrderDto } from './dto/cancel-import-order.dto';
+import { MyJwtGuard } from '../auth/guard/jwt-auth.guard';
+import { AuthorizationGuard } from '../auth/guard/authorization.guard';
+import { Permissions } from 'src/decorator/permissions.decorator';
+import { Subject } from '../auth/enums/subject.enum';
+import { Action } from '../auth/enums/action.enum';
 
 @Controller('import-order')
+@UseGuards(MyJwtGuard, AuthorizationGuard)
 export class ImportOrderController {
   constructor(private readonly importOrderService: ImportOrderService) {}
 
   @Post()
+  @Permissions({
+    subject: Subject.import_order,
+    actions: [Action.create],
+  })
   @ResponseMessage(RESPONSE_MESSAGE.CREATE)
   create(@Body() createImportOrderDto: CreateImportOrderDto) {
     return this.importOrderService.create(createImportOrderDto);
   }
 
   @Get()
+  @Permissions({
+    subject: Subject.import_order,
+    actions: [Action.view],
+  })
   @ResponseMessage(RESPONSE_MESSAGE.GET)
   findAll(
     @Query('page') page: number,
@@ -51,6 +66,10 @@ export class ImportOrderController {
   }
 
   @Get(':id')
+  @Permissions({
+    subject: Subject.import_order,
+    actions: [Action.view],
+  })
   @ResponseMessage(RESPONSE_MESSAGE.GET)
   findOne(@Param('id') id: string) {
     return this.importOrderService.findOne(+id);
@@ -67,12 +86,20 @@ export class ImportOrderController {
   // }
 
   @Post('/cancel-import-order')
+  @Permissions({
+    subject: Subject.import_order,
+    actions: [Action.update],
+  })
   @ResponseMessage(RESPONSE_MESSAGE.CANCEL_ORDER)
   cancel(@Body() cancelImportOrderDto: CancelImportOrderDto) {
     return this.importOrderService.cancel(cancelImportOrderDto);
   }
 
   @Put('/confirm-import-order/:id')
+  @Permissions({
+    subject: Subject.import_order,
+    actions: [Action.update],
+  })
   @ResponseMessage(RESPONSE_MESSAGE.CONFIRM_ORDER)
   confirm(@Param('id') id: string) {
     return this.importOrderService.confirm(+id);
