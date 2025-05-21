@@ -24,6 +24,10 @@ import { ExportOrderModule } from './modules/export-order/export-order.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { InventoryAdjustmentModule } from './modules/inventory-adjustment/inventory-adjustment.module';
 import { StatisticReportModule } from './modules/statistic-report/statistic-report.module';
+import { SocketModule } from './socket/socket.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -66,6 +70,18 @@ import { StatisticReportModule } from './modules/statistic-report/statistic-repo
     DashboardModule,
     InventoryAdjustmentModule,
     StatisticReportModule,
+
+    // notification
+    NotificationsModule,
+
+    // socket
+    SocketModule,
+
+    // task scheduling
+    ScheduleModule.forRoot(),
+
+    // event driven
+    EventEmitterModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

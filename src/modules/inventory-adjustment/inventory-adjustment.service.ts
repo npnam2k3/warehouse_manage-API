@@ -3,10 +3,15 @@ import { CreateInventoryAdjustmentDto } from './dto/create-inventory-adjustment.
 import { DataSource } from 'typeorm';
 import { InventoryAdjustment } from './entities/inventory-adjustment.entity';
 import { Inventory } from '../products/entities/inventory.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventName } from 'src/constants/event';
 
 @Injectable()
 export class InventoryAdjustmentService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    private eventEmitter: EventEmitter2,
+  ) {}
   async create(
     createInventoryAdjustmentDto: CreateInventoryAdjustmentDto,
     idUserLogin: number,
@@ -39,6 +44,12 @@ export class InventoryAdjustmentService {
         .where('productId = :productId', { productId })
         .andWhere('warehouseId = :warehouseId', { warehouseId })
         .execute();
+
+      this.eventEmitter.emit(EventName.ADJUSTMENT_QUANTITY, {
+        productId,
+        warehouseId,
+        newQuantity,
+      });
     });
   }
 

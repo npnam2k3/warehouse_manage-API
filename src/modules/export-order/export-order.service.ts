@@ -20,6 +20,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CancelExportOrderDto } from './dto/cancel-export-order.dto';
 import { PaymentDetail } from '../payments/entities/payment-detail.entity';
 import { OrderStatus } from '../import-order/enum';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventName } from 'src/constants/event';
 
 @Injectable()
 export class ExportOrderService {
@@ -27,6 +29,7 @@ export class ExportOrderService {
     @InjectRepository(ExportOrder)
     private readonly exportOrderRepository: Repository<ExportOrder>,
     private readonly dataSource: DataSource,
+    private eventEmitter: EventEmitter2,
   ) {}
   async create(createExportOrderDto: CreateExportOrderDto) {
     const { customerId, listProducts, note, payment_due_date, payment_status } =
@@ -361,6 +364,7 @@ export class ExportOrderService {
     await this.exportOrderRepository.update(id, {
       order_status: OrderStatus.COMPLETED,
     });
+    this.eventEmitter.emit(EventName.QUANTITY_CHANGE, { orderId: id });
   }
 
   calcTotalAmount(listProducts: ExportProductDTO[]) {
