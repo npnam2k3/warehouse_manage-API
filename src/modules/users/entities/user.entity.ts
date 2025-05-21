@@ -1,4 +1,5 @@
 import { InventoryAdjustment } from 'src/modules/inventory-adjustment/entities/inventory-adjustment.entity';
+import { UserNotification } from 'src/modules/notifications/entities/user-notification.entity';
 import { Payment } from 'src/modules/payments/entities/payment.entity';
 import { Role } from 'src/modules/roles/entities/role.entity';
 import {
@@ -61,4 +62,10 @@ export class User {
     (inventoryAdjustment) => inventoryAdjustment.user,
   )
   inventory_adjustments: InventoryAdjustment[];
+
+  @OneToMany(
+    () => UserNotification,
+    (userNotification) => userNotification.user,
+  )
+  user_notification: UserNotification[];
 }
