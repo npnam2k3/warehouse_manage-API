@@ -103,4 +103,24 @@ export class ExportOrderController {
   confirm(@Param('id') id: string) {
     return this.exportOrderService.confirm(+id);
   }
+
+  @Get('/historySellOfProduct/:id')
+  getHistorySellOfProduct(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Param('id') id: string,
+  ) {
+    const pageNum = page
+      ? page
+      : PAGINATION.HISTORY_SELL_OF_PRODUCT.PAGE_NUMBER;
+    const limitNum = limit
+      ? limit
+      : PAGINATION.HISTORY_SELL_OF_PRODUCT.LIMIT_NUMBER;
+
+    return this.exportOrderService.getHistorySellOfProduct({
+      limitNum,
+      pageNum,
+      productId: +id,
+    });
+  }
 }

@@ -387,4 +387,66 @@ export class ExportOrderService {
 
     return `${prefix}${timestamp}${randomStr}`; // SP (2) + timestamp (4) + random (4) = 10 ký tự
   }
+
+  async getHistorySellOfProduct({
+    limitNum,
+    pageNum,
+    productId,
+  }: {
+    limitNum: number;
+    pageNum: number;
+    productId: number;
+  }) {
+    const productRepo = this.dataSource.getRepository(Product);
+    const exportOrderDetailRepo =
+      this.dataSource.getRepository(ExportOrderDetail);
+
+    const checkProductExists: number = await productRepo.count({
+      where: {
+        id: productId,
+      },
+    });
+
+    if (checkProductExists < 1) {
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.PRODUCT),
+      );
+    }
+
+    const queryBuilder = exportOrderDetailRepo
+      .createQueryBuilder('eod')
+      .leftJoin('eod.export_order', 'eo')
+      .leftJoin('eod.product', 'p')
+      .leftJoin('eod.warehouse', 'w')
+      .select([
+        'eo.id AS id',
+        'eo.createdAt AS date_sell',
+        'eod.sell_price AS sell_price',
+        'p.name AS name_product',
+        'w.name AS warehouse_name',
+      ])
+      .where('eod.productId = :productId', { productId })
+      .andWhere('eo.order_status = :status', { status: OrderStatus.COMPLETED })
+      .orderBy('eo.createdAt', 'DESC')
+      .offset((pageNum - 1) * limitNum)
+      .limit(limitNum);
+
+    // Lấy tổng số bản ghi
+    const totalRecords = await queryBuilder.getCount();
+
+    // Áp dụng phân trang và lấy dữ liệu
+    const results = await queryBuilder.getRawMany();
+
+    const totalPages = Math.ceil(totalRecords / limitNum);
+
+    return {
+      results,
+      totalRecords,
+      totalPages,
+      conditions: {
+        pageNum,
+        limitNum,
+      },
+    };
+  }
 }

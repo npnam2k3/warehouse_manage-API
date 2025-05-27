@@ -390,4 +390,66 @@ export class ImportOrderService {
       return total_amount + curr.quantity * curr.purchase_price;
     }, 0);
   }
+
+  async getHistoryPurchaseOfProduct({
+    limitNum,
+    pageNum,
+    productId,
+  }: {
+    limitNum: number;
+    pageNum: number;
+    productId: number;
+  }) {
+    const productRepo = this.dataSource.getRepository(Product);
+    const importOrderDetailRepo =
+      this.dataSource.getRepository(ImportOrderDetail);
+
+    const checkProductExists: number = await productRepo.count({
+      where: {
+        id: productId,
+      },
+    });
+
+    if (checkProductExists < 1) {
+      throw new NotFoundException(
+        ERROR_MESSAGE.NOT_FOUND(ENTITIES_MESSAGE.PRODUCT),
+      );
+    }
+
+    const queryBuilder = importOrderDetailRepo
+      .createQueryBuilder('iod')
+      .leftJoin('iod.import_order', 'io')
+      .leftJoin('iod.product', 'p')
+      .leftJoin('iod.warehouse', 'w')
+      .select([
+        'io.id AS id',
+        'io.createdAt AS date_purchase',
+        'iod.purchase_price AS purchase_price',
+        'p.name AS name_product',
+        'w.name AS warehouse_name',
+      ])
+      .where('iod.productId = :productId', { productId })
+      .andWhere('io.order_status = :status', { status: OrderStatus.COMPLETED })
+      .orderBy('io.createdAt', 'DESC')
+      .offset((pageNum - 1) * limitNum)
+      .limit(limitNum);
+
+    // Lấy tổng số bản ghi
+    const totalRecords = await queryBuilder.getCount();
+
+    // Áp dụng phân trang và lấy dữ liệu
+    const results = await queryBuilder.getRawMany();
+
+    const totalPages = Math.ceil(totalRecords / limitNum);
+
+    return {
+      results,
+      totalRecords,
+      totalPages,
+      conditions: {
+        pageNum,
+        limitNum,
+      },
+    };
+  }
 }
