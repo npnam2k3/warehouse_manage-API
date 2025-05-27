@@ -27,4 +27,8 @@ export const PAGINATION = {
     PAGE_NUMBER: 1,
     LIMIT_NUMBER: 5,
   },
+  HISTORY_SELL_OF_PRODUCT: {
+    PAGE_NUMBER: 1,
+    LIMIT_NUMBER: 5,
+  },
 };

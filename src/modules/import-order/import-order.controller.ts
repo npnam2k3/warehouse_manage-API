@@ -104,4 +104,24 @@ export class ImportOrderController {
   confirm(@Param('id') id: string) {
     return this.importOrderService.confirm(+id);
   }
+
+  @Get('/historyPurchaseOfProduct/:id')
+  getHistoryPurchaseOfProduct(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Param('id') id: string,
+  ) {
+    const pageNum = page
+      ? page
+      : PAGINATION.HISTORY_SELL_OF_PRODUCT.PAGE_NUMBER;
+    const limitNum = limit
+      ? limit
+      : PAGINATION.HISTORY_SELL_OF_PRODUCT.LIMIT_NUMBER;
+
+    return this.importOrderService.getHistoryPurchaseOfProduct({
+      limitNum,
+      pageNum,
+      productId: +id,
+    });
+  }
 }
