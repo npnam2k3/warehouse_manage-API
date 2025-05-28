@@ -4,7 +4,6 @@ import { ExportOrder } from '../export-order/entities/export-order.entity';
 import { Repository } from 'typeorm';
 import { ImportOrder } from '../import-order/entities/import-order.entity';
 import { OrderStatus, PaymentStatus, TypeOrder } from '../import-order/enum';
-import e from 'express';
 
 @Injectable()
 export class StatisticReportService {
@@ -200,6 +199,41 @@ export class StatisticReportService {
       .andWhere('eo.payment_status IN (:...statuses)', {
         statuses: [PaymentStatus.PARTIALLY_PAID, PaymentStatus.UNPAID],
       })
+      .getMany();
+
+    const formattedImportOrders = resultImportOrder.map((order) => {
+      return {
+        ...order,
+        type_order: TypeOrder.IMPORT,
+        supplier: { name_company: order.supplier.name_company },
+      };
+    });
+    const formattedExportOrders = resultExportOrder.map((order) => {
+      return {
+        ...order,
+        type_order: TypeOrder.EXPORT,
+        customer: { fullname: order.customer.fullname },
+      };
+    });
+    const mergeData = [...formattedImportOrders, ...formattedExportOrders];
+    return mergeData;
+  }
+
+  async getOrderOverdue() {
+    const resultImportOrder = await this.importOrderRepository
+      .createQueryBuilder('io')
+      .leftJoinAndSelect('io.supplier', 'supplier')
+      .where('DATE(io.payment_due_date) < DATE(NOW())')
+      .andWhere('io.order_status = :status', { status: OrderStatus.COMPLETED })
+      .andWhere('io.amount_due > 0')
+      .getMany();
+
+    const resultExportOrder = await this.exportOrderRepository
+      .createQueryBuilder('eo')
+      .leftJoinAndSelect('eo.customer', 'customer')
+      .where('DATE(eo.payment_due_date) < DATE(NOW())')
+      .andWhere('eo.order_status = :status', { status: OrderStatus.COMPLETED })
+      .andWhere('eo.amount_due > 0')
       .getMany();
 
     const formattedImportOrders = resultImportOrder.map((order) => {

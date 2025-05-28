@@ -41,6 +41,11 @@ export class StatisticReportController {
     return this.statisticReportService.getOrdersUpcomingPayment(+num_date);
   }
 
+  @Get('orders-overdue')
+  getOrderOverdue() {
+    return this.statisticReportService.getOrderOverdue();
+  }
+
   @Get('orders-in-month')
   getOrdersInMonth(
     @Query('month')
