@@ -68,6 +68,9 @@ export class CustomersService {
             .from('export_order', 'eo')
             .where('eo.customerId = customer.id')
             .andWhere('eo.payment_status IN (:...statuses)')
+            .andWhere('eo.order_status = :status', {
+              status: OrderStatus.COMPLETED,
+            })
             .getQuery();
           return `EXISTS ${subQuery}`;
         })
@@ -84,6 +87,9 @@ export class CustomersService {
             .from('export_order', 'eo')
             .where('eo.customerId = customer.id')
             .andWhere('eo.payment_status IN (:...statuses)')
+            .andWhere('eo.order_status = :status', {
+              status: OrderStatus.COMPLETED,
+            })
             .getQuery();
           return `NOT EXISTS ${subQuery}`;
         })

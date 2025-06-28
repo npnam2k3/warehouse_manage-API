@@ -80,7 +80,7 @@ export class StatisticReportService {
       total_revenue: total_revenue || 0,
       num_export_order_canceled,
       num_import_order_canceled,
-      profit: total_revenue - total_cost || 0,
+      // profit: total_revenue - total_cost || 0,
     };
   }
 
@@ -119,8 +119,7 @@ export class StatisticReportService {
         COALESCE(es.total_revenue, 0) AS total_revenue,
         COALESCE(ipsum.num_import_orders, 0) AS num_import_orders,
         COALESCE(ipsum.num_import_orders_canceled, 0) AS num_import_orders_canceled,
-        COALESCE(ipsum.total_cost, 0) AS total_cost,
-        COALESCE(es.total_revenue, 0) - COALESCE(ipsum.total_cost, 0) AS profit
+        COALESCE(ipsum.total_cost, 0) AS total_cost
       FROM months m
       LEFT JOIN export_summary es ON es.month = m.month
       LEFT JOIN import_summary ipsum ON ipsum.month = m.month
