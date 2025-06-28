@@ -73,6 +73,9 @@ export class SuppliesService {
             .from('import_order', 'io')
             .where('io.supplierId = supplier.id')
             .andWhere('io.payment_status IN (:...statuses)')
+            .andWhere('io.order_status = :status', {
+              status: OrderStatus.COMPLETED,
+            })
             .getQuery();
           return `EXISTS ${subQuery}`;
         })
@@ -89,6 +92,9 @@ export class SuppliesService {
             .from('import_order', 'io')
             .where('io.supplierId = supplier.id')
             .andWhere('io.payment_status IN (:...statuses)')
+            .andWhere('io.order_status = :status', {
+              status: OrderStatus.COMPLETED,
+            })
             .getQuery();
           return `NOT EXISTS ${subQuery}`;
         })

@@ -212,7 +212,10 @@ export class ProductsService {
       ],
       updateProductDto,
     );
-    if (updateProductDto.description === '') newData.description = null;
+
+    if (updateProductDto.description === '') {
+      newData.description = null;
+    }
 
     // loai bo cac truong giong nhau => thu duoc object cac truong thay doi
     const changeFields = omitBy(newData, (value, key) =>
