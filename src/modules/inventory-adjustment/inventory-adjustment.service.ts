@@ -60,7 +60,8 @@ export class InventoryAdjustmentService {
       .leftJoinAndSelect('inventoryAdjustment.product', 'product')
       .leftJoinAndSelect('inventoryAdjustment.warehouse', 'warehouse')
       .leftJoin('inventoryAdjustment.user', 'user')
-      .addSelect(['user.id', 'user.fullname', 'user.email']);
+      .addSelect(['user.id', 'user.fullname', 'user.email'])
+      .orderBy('inventoryAdjustment.createdAt', 'DESC'); // Sắp xếp theo ngày tạo giảm dần
     const [inventoryLogs, totalRecords] = await queryBuilder
       .skip((pageNum - 1) * limitNum)
       .take(limitNum)

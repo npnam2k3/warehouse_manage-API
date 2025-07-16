@@ -49,7 +49,7 @@ export class ImportOrderController {
     @Query('search') search?: string,
     @Query('payment_status') payment_status?: string,
     @Query('order_status') order_status?: string,
-    @Query('sortBy') sortBy: string = 'total_amount',
+    @Query('sortBy') sortBy: string = 'createdAt',
     @Query('orderBy') orderBy: 'ASC' | 'DESC' = 'DESC',
   ) {
     const pageNum = page ? page : PAGINATION.IMPORT_ORDER.PAGE_NUMBER;

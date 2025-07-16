@@ -105,7 +105,7 @@ export class CustomersService {
       const order = orderBy?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
       queryBuilder.orderBy(`customer.${sortBy}`, order);
     } else {
-      queryBuilder.orderBy('customer.fullname', 'DESC'); // Mặc định
+      queryBuilder.orderBy('customer.createdAt', 'DESC'); // Mặc định
     }
 
     // phân trang

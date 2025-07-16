@@ -35,7 +35,11 @@ export class UnitService {
   }
 
   async findAll() {
-    return await this.unitRepository.find();
+    return await this.unitRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 
   async findOne(id: number) {

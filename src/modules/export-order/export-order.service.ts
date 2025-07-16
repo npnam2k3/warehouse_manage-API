@@ -219,7 +219,7 @@ export class ExportOrderService {
       const order = orderBy?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
       queryBuilder.orderBy(`order.${sortBy}`, order);
     } else {
-      queryBuilder.orderBy('order.total_amount', 'DESC'); // Mặc định
+      queryBuilder.orderBy('order.createdAt', 'DESC'); // Mặc định
     }
 
     const [orders, totalRecords] = await queryBuilder

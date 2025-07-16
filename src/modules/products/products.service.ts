@@ -123,7 +123,7 @@ export class ProductsService {
       const order = orderBy?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
       queryBuilder.orderBy(`product.${sortBy}`, order);
     } else {
-      queryBuilder.orderBy('product.sell_price', 'DESC'); // Mặc định
+      queryBuilder.orderBy('product.createdAt', 'DESC'); // Mặc định
     }
 
     // phan trang

@@ -56,7 +56,7 @@ export class ProductsController {
     @Query('limit') limit: number,
     @Query('search') search?: string,
     @Query('category') category?: string,
-    @Query('sortBy') sortBy: string = 'sell_price',
+    @Query('sortBy') sortBy: string = 'createdAt',
     @Query('orderBy') orderBy: 'ASC' | 'DESC' = 'DESC',
   ) {
     const pageNum = page ? page : PAGINATION.PRODUCT.PAGE_NUMBER;

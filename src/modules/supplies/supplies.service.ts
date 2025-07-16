@@ -110,7 +110,7 @@ export class SuppliesService {
       const order = orderBy?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
       queryBuilder.orderBy(`supplier.${sortBy}`, order);
     } else {
-      queryBuilder.orderBy('supplier.name_company', 'DESC'); // Mặc định
+      queryBuilder.orderBy('supplier.createdAt', 'DESC'); // Mặc định
     }
 
     // phân trang

@@ -41,7 +41,11 @@ export class WarehouseService {
   }
 
   async findAll() {
-    const warehouses = await this.warehouseRepository.find();
+    const warehouses = await this.warehouseRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
 
     return warehouses;
   }
